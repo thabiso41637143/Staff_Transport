@@ -304,6 +304,12 @@ class transactionID{
       return -1;
     }
   }
+
+  getTransactionList(){
+    let transList = this.tranId.getGeneratedIDList();
+    transList.push(this.accNumber);
+    return transList;
+  }
 }
 /**
  * 
@@ -361,13 +367,14 @@ class generatedIDs{
   }
 
   addNewId(){
-    this.spreadSheetData.appendRow([this.generatedId.toUpperCase(), this.groupId, this.status]);
+    this.spreadSheetData.appendRow(this.getGeneratedIDList());
     SpreadsheetApp.flush();
-    console.log('Successfully created new id with the following details:\n' +
-      [this.generatedId.toUpperCase(), this.groupId, this.status]);
+    console.log('Successfully created new id with the following details:\n' + this.getGeneratedIDList());
     return this.generatedId.toUpperCase();
   }
-
+  getGeneratedIDList(){
+    return [this.generatedId.toUpperCase(), this.groupId, this.status];
+  }
   getRowNumber(colNumber){
     colNumber = colNumber || 0;
     let data = this.spreadSheetData.getDataRange().getValues();
@@ -377,6 +384,14 @@ class generatedIDs{
       }
     }
     return -1;
+  }
+
+  removeId(rowNumb){
+    rowNumb = rowNumb || this.getRowNumber() + 1;
+    this.spreadSheetData.deleteRow(rowNumb);
+    SpreadsheetApp.flush();
+    return 'Successfull deleted ID with the following details\n ' 
+    + this.getGeneratedIDList() + '\n Row number: ' + rowNumb;
   }
 
   updateSpreadSheetCell(r, c, value, msg){

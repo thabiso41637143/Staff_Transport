@@ -9,9 +9,9 @@ class historicData {
     attTripHist.captureAttTrip();
   }
 
-  addPayTripHistory(userId,	passId,	amount, paydate, status, dateCaptured, spName){
+  addPayTripHistory(userId,	passId,	amount, paydate, status, dateCaptured, payId, stDate, spName){
     spName = spName || 'PaymentHistory';
-    let payHist = new tripPaymentHistory(userId,	passId,	amount, paydate, status, dateCaptured);
+    let payHist = new tripPaymentHistory(userId,	passId,	amount, paydate, status, dateCaptured, payId, stDate, spName);
     payHist.capturePayment();
   }
 
@@ -21,11 +21,6 @@ class historicData {
     userType,	homeLoc,	collectionLoc,	email, status, row, dateCap);
     capPassHist.captureCapPassHist();
   }
-
-  // addTripPaymentHistory(userId,	passId,	amount, paydate, status, dateCaptured){
-  //   let payHist = new tripPaymentHistory(userId,	passId,	amount, paydate, status, dateCaptured, );
-  //   payHist.capturePayment();  
-  // }
 
 }
 
@@ -76,12 +71,14 @@ class tripsAttendanceHistory{
  * 
  */
 class tripPaymentHistory{
-  constructor(userId,	passId,	amount, paydate, status, dateCaptured, spreadSheetName, spreadSheetId){
+  constructor(userId,	passId,	amount, paydate, status, dateCaptured, payId, stDate, spreadSheetName, spreadSheetId){
     this.userId = userId;
     this.passId = passId;
     this.amount = amount;
     this.paydate = paydate;
     this.status = status;
+    this.paymentId = payId || '';
+    this.statusDate = stDate || generalFunctions.formatDateTime();
     this.dateCaptured =  dateCaptured;
     this.spreadSheetName = spreadSheetName || 'PaymentHistory';
     this.spreadSheetId = spreadSheetId || '1XrMH9XoaiWMG3RfcdUM21wj1T8nGGWs_DsY8rcODaAQ';
@@ -96,7 +93,10 @@ class tripPaymentHistory{
   }
 
   capturePayment(){
-    this.spreadSheetData.appendRow(this.tripPaymentList());
+    let tempList = this.tripPaymentList();
+    tempList.push(this.paymentId);
+    tempList.push(this.statusDate);
+    this.spreadSheetData.appendRow(tempList);
     SpreadsheetApp.flush();
   }
 }
@@ -134,5 +134,20 @@ class capPassHistory{
   captureCapPassHist(){
     this.spreadSheetData.appendRow(this.capPassHistList());
     SpreadsheetApp.flush();
+  }
+}
+
+class transactionHistory{
+  constructor(spreadsheetName, spreadsheetId){
+    this.spreadsheetName = spreadsheetName || '';
+    this.spreadsheetId = spreadsheetId || '1ouUI-GCrIPcGPrjlnAvRhgS9p9fZ2BGKOamcfp87rd8';
+    this.spreadsheet = SpreadsheetApp.openById(this.spreadsheetId)
+    .getSheetByName(this.spreadsheetName);
+  }
+  addTrans(data, spName){
+    spName = spName || this.spreadsheetName;
+    this.spreadsheetName = spName;
+    SpreadsheetApp.openById(this.spreadsheetId)
+    .getSheetByName(this.spreadsheetName).appendRow(data);
   }
 }

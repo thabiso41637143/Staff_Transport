@@ -22,16 +22,23 @@ class captureTrips {
     colNumber = colNumber || 0;
     let data = this.spreadSheetData.getDataRange().getValues();
     for(let i = 0; i < data.length; i++){
-      if(data[i][colNumber].toString().toUpperCase() == this.tripId){
+      if(data[i][colNumber].toString().toUpperCase() == this.tripId.toString().toUpperCase()){
         return i;
       }
     }
     return -1;
   }
 
+  removeTrip(){
+    let rowNumb = this.getRowNumber() + 1;
+    this.spreadSheetData.deleteRow(rowNumb);
+    SpreadsheetApp.flush();
+    return "Removed a trip with the following details\n"+
+    this.getCaptureTripMap() + "\nRow Number: "+ rowNumb;
+  }
   getCaptureTripsList(){
     return [this.tripId, this.userId, parseFloat(this.amount).toFixed(2), Utilities.formatDate(this.date, 'GMT+0200', 'd MMMM yyyy'),
-     this.fromLocation, this.toLocation, this.status, this.driveId];
+     this.fromLocation, this.toLocation, this.status, this.driveId, this.comments];
   }
 
   getCaptureTripMap(rowHeading, header){
@@ -67,6 +74,16 @@ class captureTrips {
     }
   }
 
+  updateComments(com, col){
+    this.comments = com;
+    col = col || 9;
+    return this.updateSpreadSheetCell(this.getRowNumber() + 1, col, this.comments,
+      'Succesfully updated trip comments to\n' + this.comments);
+  }
+
+  removeTrip(){
+    this.spreadSheetData.deleteRow(this.getRowNumber() + 1);
+  }
   updateDriver(newDrive, col){
     col = col || 8;
     try{

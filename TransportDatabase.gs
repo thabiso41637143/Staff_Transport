@@ -299,11 +299,21 @@ class transportDatabaseSheet {
     }
   }
 
-  getAccout(userId){
-    for(let i = 0; i < this.getAccoutList().length; i++ ){
-      if(this.getAccoutList()[i].userId.toString().toUpperCase() == userId.toString().toUpperCase()){
-        return this.getAccoutList()[i];
-      }
+  createQuery(query, spName){
+    spName = spName || 'QuerySet';
+    this.spreadSheet.getSheetByName(spName).getRange('A1').setValue(query);
+    SpreadsheetApp.flush();
+    return this.spreadSheet.getSheetByName(spName).getDataRange().getValues().length > 1;
+  }
+  getAccout(userId, spName){
+    spName = spName || 'QuerySet';
+    let row = 1;
+    if(this.createQuery(
+      '=QUERY(Account!A:D,"Select A, B, C, D Where B = \'' + userId.toString().toUpperCase() + '\'",1)'
+    )){
+      let data = this.spreadSheet.getSheetByName(spName).getDataRange().getValues();
+      return new account(data[row][0], data[row][1].toUpperCase(), 
+        parseFloat(data[row][2]))
     }
     return -1;
   }

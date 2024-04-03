@@ -75,17 +75,13 @@ class logTracker {
 
   updateTripPaymentLog(spName) {
     spName = spName || 'TripPaymetUpdateLog';
-    //menue = menue || 'addnewpayment';
     let data = this.spreadSheet.getSheetByName(spName).getDataRange().getValues();
     for(let i = 1; i < data.length; i++){
       if(data[i][5].toString().toLowerCase() == 'waiting'){   
         let trip = new tripPaymentLog(data[i][1], data[i][2], data[i][3], data[i][4],
-            data[i][5], data[i][0], data[i][6], i, spName);
+            data[i][5], data[i][0], data[i][6], i, spName, data[i][7]);
         try{
-          trip.updateSpreadSheetCell(i + 1, 6, 'Inprogress', 'Successfull updated payment status to Inprogress on the transaction log.')
-          console.log(trip.captTripPayment());
-          trip.updateSpreadSheetCell(i + 1, 6, 'Completed', 'Successfull updated payment status to completed on the transaction log.');
-          trip.updateStatus('Closed');
+          console.info(trip.captTripPayment());
           break;
         }catch(e){
           console.error(e);
@@ -105,10 +101,6 @@ class logTracker {
       if(data[i][9].toString().toLowerCase() == 'waiting'){
         let capPass = new capturePassenger(data[i][1], data[i][2], data[i][3], data[i][4], 
         data[i][5], data[i][6], data[i][7], data[i][8],data[i][9], i, data[i][0]);
-        /*
-        userId,	groupId,	fullName,	contacts,	
-    userType,	homeLoc,	collectionLoc,	email, status, row, spreadSheetName, spreadSheetId)
-        */
         try{
           console.log(capPass.updateSpreadSheetCell(i + 1, 10, 'Inprogress', 
             'Successfull updated passenger status to Inprogress on the transaction log.'));
@@ -134,12 +126,12 @@ class logTracker {
 class tripsAttentLog{
   constructor(appId, driverId, passId, amt, attTripDate, fromLoc, toLoc, status, captDateTime, spreadSheetName, spreadSheetId){
     this.captDateTime = captDateTime || new Date();
-    this.captDateTime = Utilities.formatDate(new Date(this.captDateTime), 'GMT+0200', 'd MMMM yyyy, HH:mm:ss')
+    this.captDateTime = generalFunctions.formatDateTime(this.captDateTime);
     this.appId = appId;
     this.driverId = driverId;
     this.passId = passId;
     this.amount = amt;
-    this.attTripDate = Utilities.formatDate(new Date(attTripDate), 'GMT+0200', 'd MMMM yyyy');
+    this.attTripDate = generalFunctions.formatDate(attTripDate);
     this.fromLoc = fromLoc;
     this.toLoc = toLoc;
     this.status = status || 'Waiting';
@@ -224,9 +216,7 @@ class tripsAttentLog{
   updateDateStatus(row, col){
     row = row || this.getRowNumber() + 1;
     col = col ||10;
-    return this.updateSpreadSheetCell(row, col, 
-    Utilities.formatDate(new Date(), 'GMT+0200', 'd MMMM yyyy, HH:mm:ss'),
-    'Successfully updated Date staus.');
+    return this.updateSpreadSheetCell(row, col, generalFunctions.formatDateTime(), 'Successfully updated Date staus.');
   }
 }
 
@@ -234,16 +224,17 @@ class tripsAttentLog{
  * 
  */
 class tripPaymentLog{
-  constructor(userId,	passId,	amount, paydate, status, dateCaptured, payId, row, spreadSheetName, spreadSheetId){
+  constructor(userId,	passId,	amount, paydate, status, dateCaptured, payId, row, spreadSheetName,statusDate, spreadSheetId){
     this.userId = userId;
     this.passId = passId;
     this.amount = amount;
-    this.paydate = Utilities.formatDate(new Date(paydate), 'GMT+0200', 'd MMMM yyyy');
+    this.paydate = generalFunctions.formatDate(paydate);
     this.status = status || 'Waiting';
     this.paymentId = payId || '';
     this.payTriprow = row || 1;
+    this.statusDate = statusDate || generalFunctions.formatDateTime();
     this.dateCaptured = dateCaptured || new Date();
-    this.dateCaptured = Utilities.formatDate(new Date(this.dateCaptured), 'GMT+0200', 'd MMMM yyyy, HH:mm:ss');
+    this.dateCaptured = generalFunctions.formatDateTime(this.dateCaptured);
     this.spreadSheetName = spreadSheetName || 'PaymentLog';
     this.spreadSheetId = spreadSheetId || '1y4nNhIe8omKyTMjaB7XrPcL0CqKGMXr2x9W7Y8FLZEU';
     this.spreadSheetData = SpreadsheetApp.openById(this.spreadSheetId)
@@ -265,40 +256,34 @@ class tripPaymentLog{
   }
 
   captTripPayment(){
-    // let writer = new mainMobileApp();
-    // let payLogMap = new Map();
-    // payLogMap['passid'] = this.passId;
-    // payLogMap['amount'] = this.amount;
-    // payLogMap['driverid'] = this.userId;
-    // payLogMap['date'] = this.paydate;
-    // payLogMap['paylog'] = this;
     let transPayment = new transactionManager();
-    //let payment =  new capturePayment(this.paymentId, this.passId, this.paydate, this.amount, this.userId);
-
-    //(pymId, userId, pymDate, amount, driverId, spreadSheetId, spreadSheetName)
-    //this.paymentId = payment.paymentId;
+    console.info(transPayment.updateTransPayments(this))
     return 'Successfully Captured passenger payment of ' + parseFloat(this.amount).toFixed(2);
   }
 
   updateAmount(amount){
     this.amount = this.amount - amount;
-    return transPayment.updateTransPayments((this.payTriprow + 1), 4, this.amount, 
+    return this.updateSpreadSheetCell((this.payTriprow + 1), 4, this.amount, 
       "Updated payment on the log tracker to R"+ this.amount);
   }
 
   closePayment(){
-
-    try{
       let hist = new historicData();
       hist.addPayTripHistory(this.userId, this.passId, this.amount, this.paydate,
-          this.status, this.dateCaptured, 'TripPaymentHistory');
-    }catch(e){
-      // console.error(['An error occured while updating the payment with status of '+ this.status, e]);
-      // return ['An error occured while updating the payment with status of '+ this.status, e];
-    }
+          this.status, this.dateCaptured, this.paymentId, this.statusDate, 'TripPaymentHistory');
+      this.removePayTripLog(this.payTriprow + 1);
   }
 
-  updateStatus(status, row, col, spName ){
+  setStatus(status, msg){
+    this.status = status;
+    return this.updateSpreadSheetCell(this.payTriprow + 1, 6, status, msg);
+  }
+
+  setStatusDate(stDate, msg){
+    this.statusDate = stDate;
+    return this.updateSpreadSheetCell(this.payTriprow + 1, 8, this.statusDate, msg);
+  }
+  updateStatus(status, row, col){
     try{
       col = col || 6;
       row = row || this.payTriprow + 1;
@@ -306,8 +291,8 @@ class tripPaymentLog{
       'payment status updated to '+ status);
       this.updateDateStatus(row);
       this.status = status;
-      this.spreadSheetName = 'TripPaymetUpdateLog';
-      this.spreadSheet.getSheetByName(this.spreadSheetName).appendRow(
+      let spreadSheetName = 'TripPaymetUpdateLog';
+      this.spreadSheet.getSheetByName(spreadSheetName).appendRow(
         [this.dateCaptured, this.userId, this.passId, this.amount, this.paydate, 'waiting', this.paymentId]
         );
       let hist = new historicData();
@@ -325,8 +310,7 @@ class tripPaymentLog{
     row = row || this.payTriprow + 1;
     col = col || 8;
     return this.updateSpreadSheetCell(row, col, 
-    Utilities.formatDate(new Date(), 'GMT+0200', 'd MMMM yyyy, HH:mm:ss'),
-    'Successfully updated Date staus.');
+    generalFunctions.formatDateTime(), 'Successfully updated Date staus.');
   }
 
   payTripList(){
@@ -371,7 +355,7 @@ class capturePassenger{
     this.groupId = groupId;
     this.userId = userId;
     this.dateCap = dateCap ||new Date();
-    this.dateCap = Utilities.formatDate(new Date(this.dateCap), 'GMT+0200', 'd MMMM yyyy, HH:mm:ss');
+    this.dateCap = generalFunctions.formatDateTime(this.dateCap);
     this.spreadSheetName = spreadSheetName || 'CapturePassenger';
     this.spreadSheetId = spreadSheetId || '1y4nNhIe8omKyTMjaB7XrPcL0CqKGMXr2x9W7Y8FLZEU';
     this.spreadSheetData = SpreadsheetApp.openById(this.spreadSheetId)
@@ -438,8 +422,7 @@ class capturePassenger{
     row = row || this.row + 1;
     col = col || 11;
     return this.updateSpreadSheetCell(row, col, 
-    Utilities.formatDate(new Date(), 'GMT+0200', 'd MMMM yyyy, HH:mm:ss'),
-    'Successfully updated Date staus.');
+    generalFunctions.formatDateTime(), 'Successfully updated Date staus.');
   }
 
   removeCapPassLog(rowNumb){

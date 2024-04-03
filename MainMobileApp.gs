@@ -22,7 +22,7 @@ class mainMobileApp{
     }
     else if(option.toLowerCase() == 'triphistory'){
       let userTrips = new collectionDatabase();
-      return JSON.stringify(userTrips.getUserCaptureTripMap(details['userid']));
+      return JSON.stringify(userTrips.getPassCapturedTripMap(details['userid']));
     }
     else if(option.toLowerCase() == 'allgroup'){
       return JSON.stringify(this.getUserGroup(details['userid']));
@@ -57,7 +57,7 @@ class mainMobileApp{
       return JSON.stringify(msg.getAttSendToMsg(details['userid']));
     }
     else if(option.toLowerCase() == 'lastseen'){
-      return Utilities.formatDate(new Date(), 'GMT+0200', 'd MMMM yyyy, HH:mm:ss');
+      return generalFunctions.formatDateTime();
     }
     else if(option.toLowerCase() == 'driversummary'){
       let driverSum = new transportDatabaseSheet();
@@ -219,9 +219,9 @@ class mainMobileApp{
         let payment = coldata.captureNewPayment(payid.paymentId.generatedId, data['passid'], data['date'], 
         data['amount'], data['driverid']);
         console.log(payid.paymentId.updateStatus('Inprogress')); //Update the status to Inprogress.
-        console.log(trans.updateTransPayments(payment));
+        console.log(trans.updatePayment(payment));
         console.log('Succesfuly processed payment.');
-        return 'Succesfuly processed payment.';
+        return payment;
       }else{
         console.log('Failed to add a new Payment.');
         console.log('Payment Id is '+ payid + '\n and details are '+ data);
@@ -241,18 +241,22 @@ class mainMobileApp{
       return 'Unknown choice';
     }
   }
-
+  /**
+   * This function need to be updated
+   */
   getUserDetails(data){
     try{
       let usd = new transportDatabaseSheet();
+      let sumData = usd.getUserSummaryMap()[data['userid']];
+      let useAcc = usd.getAccout(data['userid']);
       let userData = new Map();
       userData['fullname'] = usd.getUsersMap()[data['userid']].userFullNames;
-      userData['account number'] = usd.getAccout(data['userid']).accountNumb;
-      userData['account balance'] = usd.getAccout(data['userid']).accBalance;
-      userData['unpaid days'] = usd.getUserSummaryMap()[data['userid']].totNumbUpaidDays;
-      userData['paid days'] = usd.getUserSummaryMap()[data['userid']].totNumbPaidDays;
-      userData['number days'] = usd.getUserSummaryMap()[data['userid']].totNumbDays;
-      userData['outstanding balance'] = usd.getUserSummaryMap()[data['userid']].outAmount;
+      userData['account number'] = useAcc.accountNumb; //Must be removed
+      userData['account balance'] = useAcc.accBalance;
+      userData['unpaid days'] = sumData.totNumbUpaidDays;
+      userData['paid days'] = sumData.totNumbPaidDays; // Must be removed
+      userData['number days'] = sumData.totNumbDays; //must be removed
+      userData['outstanding balance'] = sumData.outAmount;
       return userData;
     }catch(e){
       console.error(e);
@@ -266,7 +270,11 @@ class mainMobileApp{
     let userList = user.getUsersList();
     for(let i = 0; i < userList.length; i++){
       if(userList[i].userType != 'DRIVER' && accgroups[userList[i].groupID] != undefined){
-        userprofiles[userList[i].userId] = userList[i].getCustDetails();
+        let sumData = user.getUserSummaryMap()[userList[i].userId];
+        let custDet = userList[i].getCustDetails();
+        custDet['outstanding balance'] = sumData.outAmount;
+        custDet['unpaid days'] = sumData.totNumbUpaidDays;
+        userprofiles[userList[i].userId] = custDet;
       }
     }
     return userprofiles;
