@@ -157,9 +157,16 @@ class transactionManager{
   /**
    * Return an object of an paid trip.
    */
-  getPassPaidTrip(){
+  getPassPaidTrip(spreadNames, status, querySet){
+    //declaring objects 
+    spreadNames = spreadNames || 'CaptureTrip';
+    status = status || 'Paid';
+    querySet = querySet ||'=QUERY(' + spreadNames + '!A:I,"Select A, B, C, D, E, F, G, H, I Where G = \'' + status + '\'",1)'
+    let dataCol = new collectionDatabase();
 
+    return dataCol.getTrip(querySet);
   }
+
   setTransPaymentsDetails(userTrans, transId, i, dataCol, transTrack, passAcc, transIdTrack){
     /**
      * - Check if the amount paid is greater that 0 and greater than or equal to the current trip.
@@ -457,7 +464,7 @@ class transactionManager{
     //add the trip Id to Transaction Data History.
     console.info(tripHist.addTrans(tripIdTracker.tripId.getGeneratedIDList(), 'TripsIDHistory'));
     //remove the id from the id tracker.
-    console.info(tripIdTracker.tripId.removeId());
+    tripIdTracker.tripId.removeId();
   }
 
   /**
@@ -477,6 +484,74 @@ class transactionManager{
 
   }
   
+  /**
+   * 
+   */
+  updatePaidTrips(){
+    //search all paid trips of the passenger.
+    let pasTrip = this.getPassPaidTrip();   //return an object of captureTrips() class
+    //if there is not trip to process, I stop processing
+    if(pasTrip == undefined){
+      return false;
+    }
+
+    console.info(pasTrip.updateComments('Inprogress: '+ generalFunctions.formatDateTime()));
+
+    let transHist = new transactionHistory();
+    let dataCol = new collectionDatabase();
+    // return a list of objects of accountTransaction() class
+    let trans = dataCol.getTranQuerySetList(
+        '=QUERY(AccountTransaction!A:H,"Select A, B, C, D, E, F, G Where C = \'' + pasTrip.tripId + '\'",1)'
+      );
+
+    //iterate over the list of transactions.
+    for(let i = 0; i < trans.length; i++){
+      console.info(trans[i].updateComments('Inprogress: '+ generalFunctions.formatDateTime()));
+      let t = 0;
+      if(i == 0)
+        t = 1;
+      transHist.addTrans(
+        [trans[i].transId, trans[i].accountNumb,trans[i].tripId, trans[t].transType, generalFunctions.formatDate(trans[i].transDate),
+          parseFloat(trans[i].transAmount).toFixed(2), parseFloat(trans[i].accountBalance).toFixed(2), 
+          generalFunctions.formatDateTime(), parseFloat(-1 * trans[i].transAmount).toFixed(2),parseFloat(0).toFixed(2)],
+        'PaidTransactionHistory'
+        );
+      //update the Id of the transaction
+      this.completeTransactionID(trans[i].transId);
+
+      //add all unpaid transaction to the transaction data history without changes.
+      transHist.addTrans(
+        trans[i].getTransactionList(),
+        'UnpaidTransactionHistory'
+        );
+        //remove the transaction from the Datacollection Tracker.
+      console.info(trans[i].removeTransact());
+    }
+
+    //add trip details to the Transaction data history.
+    transHist.addTrans(pasTrip.getCaptureTripsList(), 'UnpaidTripHistory');
+
+    //Creating the list for paid trip transaction.
+    let pasTripList = pasTrip.getCaptureTripsList().slice(0,-1);
+    pasTripList.push(generalFunctions.formatDateTime());
+    pasTripList.push(parseFloat(pasTrip.amount).toFixed(2));
+    //update the trip Amount
+    pasTrip.updateAmount(pasTrip.amount - pasTrip.amount);
+    pasTripList.push(parseFloat(pasTrip.amount).toFixed(2));
+    //add trip details to the Transaction data history.
+    transHist.addTrans(pasTripList, 'PaidTriphistory');
+
+    //complete the trip process.
+    console.info(pasTrip.updateComments('Completed: '+ generalFunctions.formatDateTime()));
+
+    //Update the status of the trip
+    this.completeTripID(pasTrip.tripId);
+
+    //remove the trip from the captured datacollector
+    pasTrip.removeTrip();
+
+    return true;
+  }
   setTripDetails_1(passAccount, driverAcc, tripData, tripId, acc, idTr){
     /**
      * - The amount on the Passenger account is debited by the trip amount.

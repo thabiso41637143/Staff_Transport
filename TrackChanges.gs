@@ -31,6 +31,17 @@ function updateNewPassenger(){
 }
 
 /**
+ * 
+ */
+function updatePaidTrips(){
+  let paidTrips = new transactionManager();
+  if(paidTrips.updatePaidTrips())
+    updatePaidTrips();
+  else
+    console.info('Completed all paid trips');
+}
+
+/**
  * This function I run it manual to create a drive in the system
  */
 function updateNewDriver(){
