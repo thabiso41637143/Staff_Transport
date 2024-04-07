@@ -138,7 +138,7 @@ class userSummary {
  * 
  */
 class driverSummary{
-  constructor(driverId,	totNumTrip,	totNumbPayments,	comm,spreadSheetId, spreadSheetName){
+  constructor(driverId,	totNumTrip,	totNumbPayments,	comm, spreadSheetId, spreadSheetName){
     this.driverId = driverId;
     this.totNumTrip = totNumTrip;
     this.totNumbPayments = totNumbPayments;
@@ -207,5 +207,25 @@ class driverSummary{
       console.error(['Failed to update number of payments to ' + numbPayments, e]);
       return ['Failed to update number of payments to ' + numbPayments, e];
     }
+  }
+}
+
+/**
+ * 
+ */
+class userFolders{
+  constructor(userId, folderId, folderName, docId, docName, comm, spreadSheetId, spreadSheetName){
+    this.userId = userId;
+    this.folderId = folderId;
+    this.folderName = folderName;
+    this.docId = docId || '';
+    this.docName = docName;
+    this.comments = comm;
+
+    this.spreadSheetId = spreadSheetId ||'1Xsh3_Z_BvmSJw11CN_8PAXf1x-QPflEHTlN7jX2WXTA';
+    this.spreadSheetName = spreadSheetName || 'UserFolders';
+    this.spreadSheetData = SpreadsheetApp
+      .openById(this.spreadSheetId)
+      .getSheetByName(this.spreadSheetName); 
   }
 }
