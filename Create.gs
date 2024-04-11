@@ -126,12 +126,46 @@ class file{
     this.folderId = folderId;
     this.folderName = folderName;
     this.fileType = fileType;
-    this.comments = comm;
-    this.spreadSheetName = spreadSheetName || 'FolderStructures';
+    this.comments = comm || '';
+    this.spreadSheetName = spreadSheetName || 'CreatedFiles';
     this.spreadSheetId = spreadSheetId || '1-cVWfZgB1vRWT25P636wgCc-y-Zj3MWTkZSZ8cgqhDw';
     this.spreadSheetData = SpreadsheetApp.openById(this.spreadSheetId)
       .getSheetByName(this.spreadSheetName);
     this.spreadSheet = SpreadsheetApp.openById(this.spreadSheetId);
+  }
+
+  /**
+   * 
+   */
+  getRowNumber(){
+    let data = this.spreadSheetData.getDataRange().getValues();
+    for(let i = 1; i < data.length; i++){
+      if(data[i][0] == this.newFileId){
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  getFileDetailsList(){
+    return [this.folderId, this.folderName, this.newFileId, this.newFileName, this.fileType, this.comments];
+  }
+  /**
+   * 
+   */
+  getNewFile(){
+    if(this.fileType.toLowerCase() == 'document'){
+      return DocumentApp.openById(this.newFileId);
+    }
+    else if(this.fileType.toLowerCase() == 'spreadsheet'){
+      return SpreadsheetApp.openById(this.newFileId);
+    }
+    else if(this.fileType.toLowerCase() == 'powerpoint'){
+      return SlidesApp.openById(this.newFileId);
+    }
+    else{
+      return undefined;
+    }
   }
 
 }
