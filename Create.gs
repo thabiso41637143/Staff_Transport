@@ -16,8 +16,10 @@ class folderStructure {
    */
   checkFolder(){
     let datCol = new collectionDatabase();
-    return datCol.checkTransQuerySet
-      ('=QUERY(FolderStructures!A:H,"Select A, B, C, D, E Where B = \''+ this.folderName +'\' and C = \''+this.mainFolderId+'\'",1)',  'QuerySet');
+    return datCol.checkTransQuerySet(
+      '=QUERY(FolderStructures!A:H,"Select A, B, C, D, E Where LOWER(B) contains \'' + 
+      this.folderName.toLowerCase() + '\' and C = \'' + this.mainFolderId + '\'",1)',  'QuerySet'
+    );
   }
 
   /**
@@ -39,9 +41,11 @@ class folderStructure {
     if(this.checkFolder()){
       spName = spName || 'QuerySet';
       let data = this.spreadSheet.getSheetByName(spName).getDataRange().getValues()[1];
-      return new folder(data[0], data[1], data[2], data[3], data[0]);
+      return new folder(data[0], data[1], data[2], data[3], data[4]);
+    }else{
+      console.info(this.createFolder());
+      return this.getFolder();
     }
-    return false;
   }
 
   /**
@@ -52,18 +56,18 @@ class folderStructure {
       this.createFolder();
     return this.newFolder.getFolderList();
   }
-  
 }
 
 /**
  * 
  */
 class createFiles{
-  constructor(tempId, folder, fileName, spreadSheetName, spreadSheetId){
+  constructor(tempId, folder, fileName, type, spreadSheetName, spreadSheetId){
     this.tempId = tempId;
+    this.fileType = type;
     this.folder = folder || DriveApp.getFolderById('1O1WFKmKO0HhrnAH8dHUNluxLXBDAOCgv');
     this.fileName = fileName || 'New Document';
-    this.newFile = ABSALUMINUM.getFile(this.tempId, this.folder, this.fileName);
+    this.newFile = ABSALUMINUM.getFile(this.tempId, this.folder, this.fileType, this.fileName);
     this.spreadSheetName = spreadSheetName || 'CreatedFiles';
     this.spreadSheetId = spreadSheetId || '1-cVWfZgB1vRWT25P636wgCc-y-Zj3MWTkZSZ8cgqhDw';
     this.spreadSheetData = SpreadsheetApp.openById(this.spreadSheetId)
@@ -71,10 +75,32 @@ class createFiles{
     this.spreadSheet = SpreadsheetApp.openById(this.spreadSheetId);
   }
 
+  checkFile(){
+    let datCol = new collectionDatabase();
+    return datCol.checkTransQuerySet(
+      '=QUERY(CreatedFiles!A:H,"Select A, B, C, D, E, F, G Where LOWER(B) contains \'' + this.fileName.toLowerCase() + 
+      '\' and D = \'' + this.folder.getId() + '\' and LOWER(F) contains \'' + this.fileType.toLowerCase() + '\'",1)'
+    );
+  }
+
   createFile(){
-    let fileDetails = this.newFile.creatFile();
-    this.spreadSheetData.appendRow(fileDetails.fileDetailsList);
-    return 'Successfully created the file with the following details: \n'+ fileDetails.fileDetailsList;
+    if(!this.checkFile()){
+        let fileDetails = this.newFile.creatFile();
+        this.spreadSheetData.appendRow(fileDetails.fileDetailsList);
+        return 'Successfully created the file with the following details: \n'+ fileDetails.fileDetailsList;
+    }
+    return 'The file already exist.'
+  }
+
+  getFile(spName){
+    if(this.checkFile()){
+      spName = spName || 'QuerySet';
+      let data = this.spreadSheet.getSheetByName(spName).getDataRange().getValues()[1];
+      return new file(data[0], data[1], data[2], data[3], data[4], data[5], data[6]);
+    }else{
+      console.info(this.createFile());
+      return this.getFile();
+    }
   }
 }
 
@@ -150,6 +176,7 @@ class file{
   getFileDetailsList(){
     return [this.folderId, this.folderName, this.newFileId, this.newFileName, this.fileType, this.comments];
   }
+
   /**
    * 
    */
