@@ -22,6 +22,7 @@ function updateTripPaymentChanges(){
   let tripLog = new logTracker();
   tripLog.updateTripPaymentLog();
 }
+
 /**
  * 
  */

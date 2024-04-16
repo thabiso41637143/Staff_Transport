@@ -1,3 +1,60 @@
+
+/**
+ * 
+ */
+class createUserStructure{
+  constructor(userId, mainFolderId, spreadSheetName, spreadSheetId){
+    this.userId = userId;
+    this.mainFolderId = mainFolderId;
+    this.allFiles = generalFunctions.getTempFiles();
+    this.newUserFolder;
+    this.newUserFile;
+    this.databaseList;
+    this.newFileName;
+
+    this.spreadSheetName = spreadSheetName || 'UserFiles';
+    this.spreadSheetId = spreadSheetId || '1Xsh3_Z_BvmSJw11CN_8PAXf1x-QPflEHTlN7jX2WXTA';
+    this.spreadSheetData = SpreadsheetApp.openById(this.spreadSheetId)
+      .getSheetByName(this.spreadSheetName);
+    this.spreadSheet = SpreadsheetApp.openById(this.spreadSheetId);
+  }
+
+  createUserFolder(){
+    let folder = new folderStructure( this.mainFolderId, this.userId);
+    this.newUserFolder = folder.getFolder();
+    return 'successfull created user folder. With the following name ' + this.userId;
+  }
+
+  createAllUserFiles(){
+    console.info(this.createUserFolder());
+    let files = Object.keys(this.allFiles);
+    for(let i = 0; i < files.length; i++){
+      //console.info(this.allFiles[files[i]]);
+      this.newFileName = this.userId + ' '+this.allFiles[files[i]]['name'];
+      let file = new createFiles(this.allFiles[files[i]]['Id'], this.newUserFolder.getFolder(), this.newFileName, 
+      this.allFiles[files[i]]['type']);
+
+      this.newUserFile = file.getFile();
+      this.newUserFile.setViewAccess();
+      this.databaseList = [this.userId, this.mainFolderId, this.newUserFolder.getFolder().getName(),
+        this.newUserFile.newFileId, this.newFileName, this.allFiles[files[i]]['type'], this.allFiles[files[i]]['purpose']];
+      this.spreadSheetData.appendRow(this.databaseList);
+
+      console.info(this.databaseList);
+    }
+  }
+
+  /**
+   * 
+   */
+  checkFile(){
+    
+  }
+}
+
+/**
+ * 
+ */
 class folderStructure {
   constructor(mFolderId, folderName, spreadSheetName, spreadSheetId){
     this.mainFolderId = mFolderId || '1O1WFKmKO0HhrnAH8dHUNluxLXBDAOCgv';
@@ -29,9 +86,9 @@ class folderStructure {
     if(!this.checkFolder()){
       this.newFolder  = this.folder.createFolder();
       this.spreadSheetData.appendRow(this.folder.getFolderList());
-      return 'Created the folder';
+      return false;
     }
-    return 'The folder already exist.';
+    return true;
   }
 
   /**
@@ -75,6 +132,9 @@ class createFiles{
     this.spreadSheet = SpreadsheetApp.openById(this.spreadSheetId);
   }
 
+  /**
+   * 
+   */
   checkFile(){
     let datCol = new collectionDatabase();
     return datCol.checkTransQuerySet(
@@ -83,18 +143,24 @@ class createFiles{
     );
   }
 
+  /**
+   * 
+   */
   createFile(){
     if(!this.checkFile()){
         let fileDetails = this.newFile.creatFile();
         this.spreadSheetData.appendRow(fileDetails.fileDetailsList);
         return 'Successfully created the file with the following details: \n'+ fileDetails.fileDetailsList;
     }
-    return 'The file already exist.'
+    return 'The file already exist.';
   }
 
+  /**
+   * 
+   */
   getFile(spName){
     if(this.checkFile()){
-      spName = spName || 'QuerySet';
+      spName = spName || 'QuerySet_2';
       let data = this.spreadSheet.getSheetByName(spName).getDataRange().getValues()[1];
       return new file(data[0], data[1], data[2], data[3], data[4], data[5], data[6]);
     }else{
@@ -109,7 +175,6 @@ class createFiles{
  */
 class folder{
   constructor(newFolderId, newFolderName, mainFolderId, mainFolderName, comm, spreadSheetName, spreadSheetId){
-
     this.newFolderId = newFolderId;
     this.newFolderName = newFolderName;
     this.mainFolderId = mainFolderId;
@@ -190,9 +255,21 @@ class file{
     else if(this.fileType.toLowerCase() == 'powerpoint'){
       return SlidesApp.openById(this.newFileId);
     }
+    else if(this.fileType.toLowerCase() == 'pdf'){
+      return DriveApp.getFileById(this.newFileId);
+    }
     else{
       return undefined;
     }
+  }
+
+  /**
+   * 
+   */
+  setViewAccess(){
+    DriveApp.getFileById(this.newFileId)
+    .setSharing(DriveApp.Access.ANYONE, DriveApp.Permission.VIEW);
+    return 'The access of the document has changed to view only';
   }
 
 }
