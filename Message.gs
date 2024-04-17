@@ -1,9 +1,9 @@
 class messages{
-  constructor(msgSummaryId, spreadSheetId, spreadSheetName){
+  constructor(msgSummaryId, spreadSheetName, spreadSheetId){
     this.spreadSheetId = spreadSheetId ||'1C01njtZcPB9rwdqZCXBg0flCWBA2sbK8_eFHQ-xJmg8';
     this.spreadSheetName = spreadSheetName || 'AttendanceAlert';
-    this.spreadSheetData = SpreadsheetApp
-    .openById(this.spreadSheetId)
+    this.spreadSheet = SpreadsheetApp.openById(this.spreadSheetId);
+    this.spreadSheetData = this.spreadSheet
     .getSheetByName(this.spreadSheetName);
     msgSummaryId = msgSummaryId || 213;
     this.idTracker = new idTracker();
@@ -43,6 +43,27 @@ class messages{
     return userMsg;
   }
 
+  /**
+   * 
+   */
+  queryAttMsg(userId, status, query, spName){
+    query = query || 
+    '=QUERY(AttendanceAlert!A:G, "Select A, B, C, D, E, F, G Where C = \''+ userId.toUpperCase() +'\' and LOWER(F) contain \''+ status.toLowerCase() + '\'", 1)';
+    spName = spName || 'Query_Alert';
+    this.spreadSheet.getSheetByName(spName).getRange('A1').setValue(query);
+    SpreadsheetApp.flush();
+    return this.spreadSheet.getSheetByName(spName).getDataRange().getValues();
+  }
+  
+  getAttMsgList(userId, status){
+    let data = this.queryAttMsg(userId, status)
+    let attList = [];
+    for(let i = 1; i < data.length; i++){
+      attList.push(new attendance(data[i][0], data[i][1], data[i][2],
+        data[i][3], data[i][4], data[i][5], data[i][6]));
+    }
+    return attList;
+  }
   /**
    * 
    */
@@ -163,6 +184,13 @@ class attendance{
       console.log(["Failed to update the message to " + msg, e]);
       return ["Failed to update the message to " + msg, e];
     }
+  }
+
+  /**
+   * 
+   */
+  printMsg(){
+    return 'Date: '+ this.date + '\n\nMessage Details:\n'+this.message + '\n';
   }
 }
 

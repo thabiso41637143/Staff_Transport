@@ -376,6 +376,7 @@ class capturePassenger{
     return writer.mainMenueWrite(option,passDetails);
     
   }
+
   capPassList(){
     return [this.dateCap, this.userId, this.groupId, this.fullName, this.contacts,
       this.userType, this.homeLoc, this.collectionLoc, this.email, this.status];
@@ -427,5 +428,19 @@ class capturePassenger{
 
   removeCapPassLog(rowNumb){
     this.spreadSheetData.deleteRow(rowNumb);
+  }
+}
+
+/**
+ * 
+ */
+class loginStatus{
+  constructor(spreadSheetName, spreadSheetId){
+
+    this.spreadSheetName = spreadSheetName || 'LoginStatus';
+    this.spreadSheetId = spreadSheetId || '1y4nNhIe8omKyTMjaB7XrPcL0CqKGMXr2x9W7Y8FLZEU';
+    this.spreadSheetData = SpreadsheetApp.openById(this.spreadSheetId)
+      .getSheetByName(this.spreadSheetName);
+    this.spreadSheet = SpreadsheetApp.openById(this.spreadSheetId);
   }
 }
