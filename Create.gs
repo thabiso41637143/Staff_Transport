@@ -38,17 +38,22 @@ class createUserStructure{
       this.newUserFile.setViewAccess();
       this.databaseList = [this.userId, this.mainFolderId, this.newUserFolder.getFolder().getName(),
         this.newUserFile.newFileId, this.newFileName, this.allFiles[files[i]]['type'], this.allFiles[files[i]]['purpose']];
-      this.spreadSheetData.appendRow(this.databaseList);
-
-      console.info(this.databaseList);
+      if(!this.checkFile()){
+        this.spreadSheetData.appendRow(this.databaseList);
+        console.info('Successfully updated the database spreadsheet to:\n' + this.databaseList);
+      }
     }
   }
 
   /**
    * 
    */
-  checkFile(){
-    
+  checkFile(query, spName){
+    spName = spName || 'QuerySet';
+    query = query || '=QUERY(UserFiles!A:H,"Select A, B, C, D, E, F, G, H Where D = \'' + this.newUserFile.newFileId + '\'",1)';
+    this.spreadSheet.getSheetByName(spName).getRange('A1').setValue(query);
+    SpreadsheetApp.flush(); 
+    return this.spreadSheet.getSheetByName(spName).getDataRange().getValues().length > 1;
   }
 }
 

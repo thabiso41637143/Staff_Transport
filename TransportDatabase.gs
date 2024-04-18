@@ -41,6 +41,7 @@ class transportDatabaseSheet {
     }
     return groupMap;
   }
+  
   getAccoutMap(spreadNames, startRow){
     spreadNames = spreadNames || 'Account';
     startRow = startRow || 1;
@@ -194,13 +195,46 @@ class transportDatabaseSheet {
         [userId, 0, 0, 0, 0, 0];
   }
 
+  /**
+   * @return a user object from the Database tracker.
+   */
+  getUser(userId){
+    userId = userId.toString().replaceAll(" ", "");
+    let user = this.createQuery(
+      '=QUERY(Users!A:I,"Select A, B, C, D, E, F, G, H, I Where A = \'' + userId.toUpperCase() + '\'",1)'
+    )
+    if(user.length > 1){
+      user = user[1];
+      return new userDetails(user[0].toUpperCase(), user[1].toUpperCase(), 
+        user[2], user[3].toUpperCase(), user[4].toUpperCase(), user[5].toUpperCase(),
+        user[6], parseInt(user[7]), user[8]);
+    }
+    return undefined;
+  }
+
+    /**
+   * @return a user summary object from the Database tracker.
+   */
+  getUserSummary(userId){
+    userId = userId.toString().replaceAll(" ", "");
+    let userSumm = this.createQuery(
+      '=QUERY( UserSummary!A:G,"Select A, B, C, D, E, F, G Where A = \'' + userId + '\'",1)'
+    )
+    if(userSumm.length > 1){
+      userSumm = userSumm[1];
+      return new userSummary(userSumm[0].toUpperCase(), parseInt(userSumm[1]), 
+        parseFloat(userSumm[2]).toFixed(2), parseFloat(userSumm[3]).toFixed(2), 
+        parseInt(userSumm[4]), parseInt(userSumm[5]));
+    }
+    return undefined;
+  }
   removeUser(userId, spreadNames){
     try{
         userId = userId.toString().replaceAll(" ", "");
         spreadNames = spreadNames || 'Users';
         this.spreadSheet
         .getSheetByName(spreadNames).
-        deleteRow((this.getUsersMap(spreadNames)[userId.toUpperCase()].getRowNumber()) + 1);
+        deleteRow((this.getUser(userId.toUpperCase()).getRowNumber()) + 1);
         SpreadsheetApp.flush();
         return 'Successfully delete the user with the following ID '+ userId;
     }catch(e){
@@ -238,22 +272,22 @@ class transportDatabaseSheet {
     let resp = '';
     try{
         if(head.toLowerCase() == 'full names'){
-          resp = this.getUsersMap()[id].setFullName(details);
+          resp = this.getUser(id).setFullName(details);
         }
         else if(head.toLowerCase() == 'contact numbers'){
-          resp = this.getUsersMap()[id].setContact(details);
+          resp = this.getUser(id).setContact(details);
         }
         else if(head.toLowerCase() == 'email'){
-          resp = this.getUsersMap()[id].setEmail(details);
+          resp = this.getUser(id).setEmail(details);
         }
         else if(head.toLowerCase() == 'groupid'){
-          resp = this.getUsersMap()[id].setGroupId(details);
+          resp = this.getUser(id).setGroupId(details);
         }
         else if(head.toLowerCase() == 'home location'){
-          resp = this.getUsersMap()[id].setHomeLocation(details);
+          resp = this.getUser(id).setHomeLocation(details);
         }
         else if(head.toLowerCase() == 'work location'){
-          resp = this.getUsersMap()[id].setWorkLocation(details);
+          resp = this.getUser(id).setWorkLocation(details);
         }
         else{
           resp = 'Invalid key: '+ head;
@@ -272,19 +306,19 @@ class transportDatabaseSheet {
     try{
       let resp = '';
       if(head.toLowerCase() == 'total number of days'){
-        resp =  this.getUserSummaryMap()[id].updateNumbDays(data);
+        resp =  this.getUserSummary(id).updateNumbDays(data);
       }
       else if(head.toLowerCase() == 'amount paid'){
-        resp =  this.getUserSummaryMap()[id].updateAmountPaid(data);
+        resp =  this.getUserSummary(id).updateAmountPaid(data);
       }
       else if(head.toLowerCase() == 'outstanding amount'){
-        resp =  this.getUserSummaryMap()[id].updateOustandingAmount(data);     
+        resp =  this.getUserSummary(id).updateOustandingAmount(data);     
       }
       else if(head.toLowerCase() == 'total number of unpaid days'){
-        resp =  this.getUserSummaryMap()[id].updateTotalUnpaidDays(data);
+        resp =  this.getUserSummary(id).updateTotalUnpaidDays(data);
       }
       else if(head.toLowerCase() == 'total number of paid days'){
-        resp =  this.getUserSummaryMap()[id].updateTotalPaidDays(data);
+        resp =  this.getUserSummary(id).updateTotalPaidDays(data);
       }
       else{
         resp = 'Invalid key: '+ head;
@@ -303,14 +337,14 @@ class transportDatabaseSheet {
     spName = spName || 'QuerySet';
     this.spreadSheet.getSheetByName(spName).getRange('A1').setValue(query);
     SpreadsheetApp.flush();
-    return this.spreadSheet.getSheetByName(spName).getDataRange().getValues().length > 1;
+    return this.spreadSheet.getSheetByName(spName).getDataRange().getValues();
   }
   getAccout(userId, spName){
     spName = spName || 'QuerySet';
     let row = 1;
     if(this.createQuery(
       '=QUERY(Account!A:D,"Select A, B, C, D Where B = \'' + userId.toString().toUpperCase() + '\'",1)'
-    )){
+    ).length > 1){
       let data = this.spreadSheet.getSheetByName(spName).getDataRange().getValues();
       return new account(data[row][0], data[row][1].toUpperCase(), 
         parseFloat(data[row][2]))

@@ -2,6 +2,65 @@
 /**
  * 
  */
+class updateUserTemplates{
+  constructor(userId, spreadSheetName, spreadSheetId){
+
+    this.userId = userId;
+    this.userDatabase = new transportDatabaseSheet();
+    this.spreadSheetName = spreadSheetName || 'UserFiles';
+    this.spreadSheetId = spreadSheetId || '1Xsh3_Z_BvmSJw11CN_8PAXf1x-QPflEHTlN7jX2WXTA';
+    this.spreadSheetData = SpreadsheetApp.openById(this.spreadSheetId)
+      .getSheetByName(this.spreadSheetName);
+    this.spreadSheet = SpreadsheetApp.openById(this.spreadSheetId);
+  }
+
+  /**
+   * 
+   */
+  queryFiles(query, spName){
+    spName = spName || 'QuerySet';
+    this.spreadSheet.getSheetByName(spName).getRange('A1').setValue(query);
+    SpreadsheetApp.flush();
+    return  this.spreadSheet.getSheetByName(spName).getDataRange().getValues();
+  }
+
+  /**
+   * 
+   */
+  updateUserTripHistory(){
+    let docData = this.queryFiles(
+      '=QUERY(UserFiles!A:H,"Select A, B, C, D, E, F, G, H Where A = \'' + this.userId + '\' and LOWER(G) contains \'trip history\'",1)'
+    )[1];
+    let userDoc = new document(docData[3], docData[1]);
+    let userName =   this.userDatabase.getUser(this.userId);
+
+    //replacing text from the document
+    userDoc.replaceText({'<<PASSENGERNAME>>': userName.userFullNames});
+
+    //updating the payment table
+
+    //updating the trip table.
+
+  }
+
+  /**
+   * 
+   */
+  updateUserMsgReport(){
+
+  }
+
+  /**
+   * 
+   */
+  updateUserHistory(){
+    
+  }
+}
+
+/**
+ * 
+ */
 class document {
   constructor(docId, foldId, spreadSheetName, spreadSheetId){
     this.document = DocumentApp.openById(docId);
@@ -31,6 +90,10 @@ class document {
     return this.doc.addRow(rowCont, 1);
   }
 
+  getDocTables(){
+    return this.doc.getTableList();
+  }
+
   getDocUrl(){
     return this.doc.getDocUrl();
   }
@@ -42,5 +105,5 @@ class document {
   closeDoc(){
     this.doc.closeDoc();
   }
-  
 }
+
