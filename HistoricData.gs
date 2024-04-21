@@ -127,7 +127,7 @@ class capPassHistory{
   }
 
   capPassHistList(){
-    return [Utilities.formatDate(new Date(this.dateCap), 'GMT+0200', 'd MMMM yyyy, HH:mm:ss'), this.userId, this.groupId, this.fullName, this.contacts,
+    return [generalFunctions.formatDateTime(this.dateCap), this.userId, this.groupId, this.fullName, this.contacts,
       this.userType, this.homeLoc, this.collectionLoc, this.email, this.status];
   }
 
@@ -137,17 +137,57 @@ class capPassHistory{
   }
 }
 
+/**
+ * 
+ */
 class transactionHistory{
   constructor(spreadsheetName, spreadsheetId){
-    this.spreadsheetName = spreadsheetName || '';
+    this.spreadsheetName = spreadsheetName;
     this.spreadsheetId = spreadsheetId || '1ouUI-GCrIPcGPrjlnAvRhgS9p9fZ2BGKOamcfp87rd8';
-    this.spreadsheet = SpreadsheetApp.openById(this.spreadsheetId)
-    .getSheetByName(this.spreadsheetName);
+    this.spreadsheet = SpreadsheetApp.openById(this.spreadsheetId);
   }
+
+  /**
+   * 
+   */
   addTrans(data, spName){
-    spName = spName || this.spreadsheetName;
     this.spreadsheetName = spName;
-    SpreadsheetApp.openById(this.spreadsheetId)
-    .getSheetByName(this.spreadsheetName).appendRow(data);
+    this.spreadsheet.getSheetByName(this.spreadsheetName).appendRow(data);
+    SpreadsheetApp.flush();
+  }
+
+  /**
+   * 
+   */
+  queryData(query, spName){
+    let lock = LockService.getScriptLock();
+    lock.waitLock(400000);
+    this.spreadsheetName = spName;
+    this.spreadsheet.getSheetByName(this.spreadsheetName).getRange('A1').setValue(query);
+    SpreadsheetApp.flush();
+    lock.releaseLock();
+
+    return this.spreadsheet.getSheetByName(this.spreadsheetName).getDataRange().getValues();
+  }
+
+  /**
+   * 
+   */
+  getUserPaidHistory(userId, spName){
+    spName = spName || 'QueryData';
+    let data = this.queryData(
+      '=QUERY(PaidTriphistory!A:K, "select C, D, G, I, J, K Where B = \'' + userId + '\'",1)'
+      , spName);
+    let fomartData = [];
+    for(let i = 1; i < data.length; i++){
+      let status = 'Paid';
+      if(data[i][2] == 'unpaid') status = 'Not fully paid';
+      fomartData.push(
+        [generalFunctions.formatDate(data[i][1]), 'R ' + parseFloat(data[i][0]).toFixed(2), 
+        status, generalFunctions.formatDate(data[i][3]), 'R ' + parseFloat(data[i][4]).toFixed(2), 
+        'R ' + parseFloat(data[i][5]).toFixed(2)]
+      );
+    }
+    return fomartData;
   }
 }

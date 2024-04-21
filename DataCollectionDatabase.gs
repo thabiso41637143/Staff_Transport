@@ -25,6 +25,12 @@ class collectionDatabase {
     }
   }
 
+  queryData(query, querySheet){
+    querySheet = querySheet || 'QuerySet';
+    this.spreadSheet.getSheetByName(querySheet).getRange('A1').setValue(query);
+    SpreadsheetApp.flush();
+    return this.spreadSheet.getSheetByName(querySheet).getDataRange().getValues();
+  }
   addNewTransaction(userId, transAmount, tripId, transType, summaryId){
     try{
       summaryId = summaryId || 209;
@@ -123,23 +129,6 @@ class collectionDatabase {
   }
 
   /**
-   * Create an altenative function to get this information
-   */
-  /*
-  getUserCaptureTripMap(userid, spreadNames){
-    spreadNames = spreadNames || 'CaptureTrip';
-    let useTripMap = new Map();
-    for(let trip in this.getCapturedTripMap()){
-      if(this.getCapturedTripMap()[trip].userId.toUpperCase() == userid.toUpperCase() &&
-        this.getCapturedTripMap()[trip].status.toLowerCase() != 'paid'){
-        useTripMap[this.getCapturedTripMap()[trip].tripId] = this.getCapturedTripMap()[trip].getCaptureTripMap();
-      }
-    }
-    return useTripMap;
-  }
-  */
-
-  /**
    * New updated passenger trip
    */
   getPassCapturedTripMap(userid, spreadNames, querySpreadSheet){
@@ -164,6 +153,34 @@ class collectionDatabase {
   }
 
   /**
+   * 
+   */
+  getUserPaymentList(userId){
+    let paydata = this.queryData(
+      '=QUERY(CapturePayment!A:F,"Select A, B, C, D, E, F Where LOWER(B) contains \'' + userId.toLowerCase() + '\'",1)'
+    );
+    let lock = LockService.getScriptLock();
+    lock.waitLock(400000);
+    try{
+      paydata = this.queryData(
+        '=QUERY(CapturePayment!A:F,"Select A, B, C, D, E, F Where LOWER(B) contains \'' + userId.toLowerCase() + '\'",1)'
+      );
+      lock.releaseLock();
+    }catch(e){
+      console.error(e);
+      lock.releaseLock();
+       return e;
+    }
+    let payList = [];
+    for(let i = 1; i < paydata.length; i++){
+      payList.push(
+        new capturePayment(paydata[i][0].toUpperCase(), paydata[i][1].toUpperCase(), 
+          generalFunctions.formatDate(paydata[i][2]), parseFloat(paydata[i][3]), paydata[i][4])
+      )
+    }
+    return payList;
+  }
+  /**
    * return an object of a trip
    */
   getTrip(querySet, querySpreadSheet, row){
@@ -180,6 +197,33 @@ class collectionDatabase {
         data[row][7].toUpperCase(), data[row][8]);
     }
     return undefined;
+  }
+
+  /**
+   * @return an object of trip using tripId
+   */
+  getTripId(tripId){
+    let lock = LockService.getScriptLock();
+    lock.waitLock(400000);
+    let userTrip;
+    try{
+      userTrip = this.queryData(
+        '=QUERY(CaptureTrip!A:I,"Select A, B, C, D, E, F, G, H, I Where LOWER(A) contains \'' + tripId.toLowerCase() + '\'",1)'
+      );
+      lock.releaseLock();
+    }catch(error){
+      console.error(error);
+      lock.releaseLock();
+      return error;
+    }
+    if(userTrip.length > 1){
+      userTrip = userTrip[1];
+      return new captureTrips(userTrip[0].toUpperCase(), userTrip[1].toUpperCase(), 
+        parseFloat(userTrip[2]), new Date(userTrip[3]), userTrip[4], userTrip[5], userTrip[6].toLowerCase(), 
+        userTrip[7].toUpperCase(), userTrip[8]);
+    }
+    return undefined;
+
   }
 
   /**
@@ -308,7 +352,7 @@ class collectionDatabase {
     try{
       spreadNames = spreadNames || 'CaptureTrip';
       this.spreadSheet.getSheetByName(spreadNames)
-        .deleteRow(this.getCapturedTripMap()[tripId.toUpperCase()].getRowNumber() + 1);
+        .deleteRow(this.getTripId(tripId).getRowNumber() + 1);
       SpreadsheetApp.flush();
       return 'Successfully deleted the row with the trip id: '+ tripId;
     }catch(e){
@@ -358,22 +402,22 @@ class collectionDatabase {
     let resp = '';
     try{
         if(head.toLowerCase() == 'user id'){
-          resp = this.getCapturedTripMap()[tripId].updateUserId(details.toUpperCase());
+          resp = this.getTripId(tripId).updateUserId(details.toUpperCase());
         }
         else if(head.toLowerCase() == 'trip amount'){
-          resp = this.getCapturedTripMap()[tripId].updateAmount(parseFloat(details).toFixed(2));
+          resp = this.getTripId(tripId).updateAmount(parseFloat(details).toFixed(2));
         }
         else if(head.toLowerCase() == 'trip date'){
-          resp = this.getCapturedTripMap()[tripId].updateDate(details);
+          resp = this.getTripId(tripId).updateDate(details);
         }
         else if(head.toLowerCase() == 'from location'){
-          resp = this.getCapturedTripMap()[tripId].updateFromLoc(details);
+          resp = this.getTripId(tripId).updateFromLoc(details);
         }
         else if(head.toLowerCase() == 'to location'){
-          resp = this.getCapturedTripMap()[tripId].updateToLoc(details);
+          resp = this.getTripId(tripId).updateToLoc(details);
         }
         else if(head.toLowerCase() == 'status'){
-          resp = this.getCapturedTripMap()[tripId].updateStatus(details);
+          resp = this.getTripId(tripId).updateStatus(details);
         }
         else{
           resp = 'Invalid key: '+ head;
