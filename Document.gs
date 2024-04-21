@@ -35,8 +35,8 @@ class updateUserTemplates{
     userData = this.getFile('Message Report');
     this.msgDoc = new document(userData[3], userData[1]);
 
-    // userData = this.getFile('User History');
-    // this.allUserHist = new document(userData[3], userData[1]);
+    userData = this.getFile('User History');
+    this.allUserHist = new allUserData(userData[3], userData[1]);
   }
   /**
    * 
@@ -52,7 +52,6 @@ class updateUserTemplates{
    * 
    */
   updateUserTripHistory(){
-
     //replacing text from the document
     this.payTripHist.replaceText({'<<PASSENGERNAME>>': this.userDatabase.getUser(this.userId).userFullNames});
 
@@ -70,13 +69,22 @@ class updateUserTemplates{
     for(let i = 0; i < userTripList.length; i++){
       console.info(this.payTripHist.addToRow(userTripList[i], 1, 1));
     }
+    this.payTripHist.closeDoc();
   }
 
   /**
    * 
    */
   updateUserMsgReport(){
-
+    //replacing text from the document
+    this.msgDoc.replaceText({'<<passengername>>': this.userDatabase.getUser(this.userId).userFullNames});
+    let userMsg = new messages();
+    let userMsgList = userMsg.getAttMsgList(this.userId);
+    for(let i = 0; i < userMsgList.length; i++){
+      console.info(this.msgDoc.insertParag(userMsgList[i].printMsg()));
+      console.info(this.msgDoc.drawLine());
+    }
+    this.msgDoc.closeDoc();
   }
 
   /**
@@ -105,6 +113,26 @@ class document {
 
   }
 
+  /**
+   * 
+   */
+  insertParag(text, pos){
+    pos = pos || 2;
+    text = text || '';
+    return this.doc.addParagraph(pos, text);
+  }
+
+  /**
+   * 
+   */
+  drawLine(pos){
+    pos = pos || 2;
+    return this.doc.addHorizontalLine(pos);
+  }
+
+  /**
+   * 
+   */
   createPDF(){
     console.info(this.doc.createPDFDocument());
     this.spreadSheetData.appendRow(this.doc.getPDFDetailsList());

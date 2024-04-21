@@ -102,8 +102,7 @@ class tripPaymentHistory{
 }
 
 /**
- *   addCapPassHistory(userId,	groupId,	fullName,	contacts,	
-    userType,	homeLoc,	collectionLoc,	email, status, row, dateCap)
+ * 
  */
 class capPassHistory{
   constructor(userId,	groupId,	fullName,	contacts,	
@@ -190,4 +189,8 @@ class transactionHistory{
     }
     return fomartData;
   }
+
+  /**
+   * 
+   */
 }
