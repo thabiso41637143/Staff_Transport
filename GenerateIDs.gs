@@ -59,11 +59,16 @@ class summaryID{
 
   checkId(query, spName){
     spName = spName || 'ReadQueryData';
+    return this.getQueryData(query, spName).length > 1;
+  }
+
+  getQueryData(query, spName){
+    spName = spName || 'ReadQueryData';
     this.spreadSheet.getSheetByName(spName)
     .getRange('A1').setValue(query);
     SpreadsheetApp.flush();
     return this.spreadSheet.getSheetByName(spName)
-    .getDataRange().getValues().length > 1;
+    .getDataRange().getValues();
   }
 
   getUserIDMap(startRow, spName){
@@ -77,6 +82,13 @@ class summaryID{
       data[i][2]);
     }
     return usId;
+  }
+  getMessageId(msgId, spName){
+    spName = spName || 'MessageId';
+    let msg = this.getQueryData(
+      '=QUERY(MessageId!A1:E, "Select A, B, C, D, E where A = \'' + msgId + '\'",1)'
+      )[1];
+    return new new messageID(msg[0].toUpperCase(), msg[1], msg[2], msg[3]);
   }
 
   getMessageIDMap(startRow, spName){
@@ -261,8 +273,9 @@ class summaryID{
  * 
  */
 class accountID{
-  constructor(id, group, status, userId, spreadSheetName, spreadSheetId){
+  constructor(id, group, status, userId, comm, spreadSheetName, spreadSheetId){
     this.spreadSheetName = spreadSheetName || 'AccountId';
+    this.comments = comm || '';
     this.userId = userId;
     this.accId = new generatedIDs(id, group, status, this.spreadSheetName, spreadSheetId);
   }
@@ -278,7 +291,12 @@ class accountID{
       console.error(e);
       return -1;
     }
+  }
 
+  getAccountIdList(){
+    let accList = this.accId.getGeneratedIDList();
+    accList.push(this.comments);
+    return accList;
   }
 }
 
@@ -286,8 +304,9 @@ class accountID{
  * 
  */
 class transactionID{
-  constructor(id, accNumb, group, status, spreadSheetName, spreadSheetId){
+  constructor(id, accNumb, group, status, comm, spreadSheetName, spreadSheetId){
     this.spreadSheetName = spreadSheetName || 'AccountTransactionId';
+    this.comments = comm || '';
     this.tranId = new generatedIDs(id, group, status, this.spreadSheetName, spreadSheetId);
     this.accNumber = accNumb;
   }
@@ -308,6 +327,7 @@ class transactionID{
   getTransactionList(){
     let transList = this.tranId.getGeneratedIDList();
     transList.push(this.accNumber);
+    transList.push(this.comments);
     return transList;
   }
 }
@@ -315,9 +335,16 @@ class transactionID{
  * 
  */
 class userID{
-  constructor(id, group, status, spreadSheetName, spreadSheetId){
+  constructor(id, group, status, comm, spreadSheetName, spreadSheetId){
     this.spreadSheetName = spreadSheetName || 'UsersId';
+    this.comments = comm || '';
     this.userId = new generatedIDs(id, group, status, this.spreadSheetName, spreadSheetId);
+  }
+
+  getUserIdList(){
+    let userList = this.userId.getGeneratedIDList();
+    userList.push(this.comments);
+    return userList;
   }
 
 }
@@ -326,9 +353,16 @@ class userID{
  * 
  */
 class tripsID{
-  constructor(id, group, status, spreadSheetName, spreadSheetId){
+  constructor(id, group, status, comm, spreadSheetName, spreadSheetId){
     this.spreadSheetName = spreadSheetName || 'TripsId';
+    this.comments = comm || '';
     this.tripId = new generatedIDs(id, group, status, this.spreadSheetName, spreadSheetId);
+  }
+
+  getTripIdList(){
+    let tripList = this.tripId.getGeneratedIDList();
+    tripList.push(this.comments);
+    return tripList;
   }
 
 }
@@ -337,9 +371,16 @@ class tripsID{
  * 
  */
 class paymentID{
-  constructor(id, group, status, spreadSheetName, spreadSheetId){
+  constructor(id, group, status, comm, spreadSheetName, spreadSheetId){
     this.spreadSheetName = spreadSheetName || 'PaymentId';
+    this.comments = comm || '';
     this.paymentId = new generatedIDs(id, group, status, this.spreadSheetName, spreadSheetId);
+  }
+
+  getPaymentList(){
+    let payList = this.paymentId.getGeneratedIDList();
+    payList.push(this.comments);
+    return payList;
   }
 }
 
@@ -347,9 +388,16 @@ class paymentID{
  * 
  */
 class messageID{
-  constructor(id, group, status, spreadSheetName, spreadSheetId){
+  constructor(id, group, status, comm, spreadSheetName, spreadSheetId){
     this.spreadSheetName = spreadSheetName || 'MessageId';
+    this.comments = comm || '';
     this.messageId = new generatedIDs(id, group, status, this.spreadSheetName, spreadSheetId);
+  }
+
+  getMsgDetailList(){
+    let msgList = this.messageId.getGeneratedIDList();
+    msgList.push(this.comments);
+    return msgList;
   }
 }
 

@@ -48,15 +48,19 @@ class messages{
    */
   queryAttMsg(userId, status, query, spName){
     query = query || 
-    '=QUERY(AttendanceAlert!A:G, "Select A, B, C, D, E, F, G Where C = \''+ userId.toUpperCase() +'\' and LOWER(F) contain \''+ status.toLowerCase() + '\'", 1)';
+    '=QUERY(AttendanceAlert!A:G, "Select A, B, C, D, E, F, G Where C = \''+ userId.toUpperCase() +'\' and LOWER(F) = \''+ status.toLowerCase() + '\'", 1)';
     spName = spName || 'Query_Alert';
     this.spreadSheet.getSheetByName(spName).getRange('A1').setValue(query);
     SpreadsheetApp.flush();
     return this.spreadSheet.getSheetByName(spName).getDataRange().getValues();
   }
   
+  /**
+   * @return attendance list objects
+   */
   getAttMsgList(userId, status){
-    let data = this.queryAttMsg(userId, status)
+    status = status || 'Read';
+    let data = this.queryAttMsg(userId, status);
     let attList = [];
     for(let i = 1; i < data.length; i++){
       attList.push(new attendance(data[i][0], data[i][1], data[i][2],
@@ -64,6 +68,7 @@ class messages{
     }
     return attList;
   }
+
   /**
    * 
    */
@@ -144,6 +149,12 @@ class attendance{
     return msgMap;
   }
 
+  /**
+   * 
+   */
+  deleteMsg(){
+    this.spreadSheetData.deleteRow(this.getRowNumber() + 1);
+  }
   /*
   */
   addMessage(){

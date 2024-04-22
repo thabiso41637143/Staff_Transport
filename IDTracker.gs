@@ -4,6 +4,18 @@ class idTracker {
     this.spreadSheet = SpreadsheetApp.openById(this.spreadSheetId);
   }
 
+  queryId(query, spreadNames){
+    let lock = LockService.getScriptLock();
+    lock.waitLock(400000);
+    spreadNames = spreadNames || 'ReadQueryData';
+    this.spreadSheet.getSheetByName(spreadNames)
+    .getRange('A1').setValue(query);
+    SpreadsheetApp.flush();
+    lock.releaseLock();
+    return this.spreadSheet.getSheetByName(spreadNames)
+    .getDataRange().getValues();
+  }
+
   getSummaryIdMap(spreadNames, startRow){
     spreadNames = spreadNames || 'SummaryId';
     startRow = startRow || 1;
@@ -36,83 +48,81 @@ class idTracker {
     return summaryList;
   }
 
-  getUserId(userId, spreadNames, startRow){
+  getUserId(userId, spreadNames){
     spreadNames = spreadNames || 'UsersId';
-    startRow = startRow || 1;
-    let data = this.spreadSheet.getSheetByName(spreadNames)
-    .getDataRange().getValues();
-    for(let i = startRow; i < data.length; i++){
-      if(userId.toUpperCase() == data[i][0].toUpperCase()){
-        return new userID(data[i][0].toUpperCase(), data[i][1], data[i][2]);
-      }
+    try{
+      let user = this.queryId(
+          '=QUERY(' + spreadNames + '!A1:E, "Select A, B, C, D, E where A = \'' + userId.toUpperCase() + '\'",1)'
+        )[1];
+      return new userID(user[0].toUpperCase(), user[1], user[2], user[3]);
+    }catch(e){
+      console.log(e);
+      return undefined;
     }
-    return undefined;
   }
 
-  getPaymentID(payId, spreadNames, startRow){
+  getPaymentID(payId, spreadNames){
     spreadNames = spreadNames || 'PaymentId';
-    startRow = startRow || 1;
-    let data = this.spreadSheet.getSheetByName(spreadNames)
-    .getDataRange().getValues();
-    for(let i = startRow; i < data.length; i++){
-      if(payId.toUpperCase() == data[i][0].toUpperCase()){
-        return new paymentID(data[i][0].toUpperCase(), data[i][1], data[i][2]);
-      }
+    try{
+      let pay = this.queryId(
+          '=QUERY(' + spreadNames + '!A1:E, "Select A, B, C, D, E where A = \'' + payId.toUpperCase() + '\'",1)'
+        )[1];
+      return new paymentID(pay[0].toUpperCase(), pay[1], pay[2], pay[3]);
+    }catch(e){
+      console.log(e);
+      return undefined;
     }
-    return undefined;
   }
 
-  gettripsID(tripId, spreadNames, startRow){
+  gettripsID(tripId, spreadNames){
     spreadNames = spreadNames || 'TripsId';
-    startRow = startRow || 1;
-    let data = this.spreadSheet.getSheetByName(spreadNames)
-    .getDataRange().getValues();
-    for(let i = startRow; i < data.length; i++){
-      if(tripId.toUpperCase() == data[i][0].toUpperCase()){
-        return new tripsID(data[i][0].toUpperCase(), data[i][1], data[i][2]);
-      }
+    try{
+      let trip = this.queryId(
+          '=QUERY(' + spreadNames + '!A1:E, "Select A, B, C, D, E where A = \'' + tripId.toUpperCase() + '\'",1)'
+        )[1];
+      return new paymentID(trip[0].toUpperCase(), trip[1], trip[2], trip[3]);
+    }catch(e){
+      console.log(e);
+      return undefined;
     }
-    return undefined;
   }
 
-  getTransID(transId, spreadNames, startRow){
+  getTransID(transId, spreadNames){
     spreadNames = spreadNames || 'AccountTransactionId';
-    startRow = startRow || 1;
-    let data = this.spreadSheet.getSheetByName(spreadNames)
-    .getDataRange().getValues();
-    for(let i = startRow; i < data.length; i++){
-      if(transId.toUpperCase() == data[i][0].toUpperCase()){
-        return new transactionID(data[i][0].toString().toUpperCase(), data[i][3],
-        data[i][1], data[i][2]);
-      }
+    try{
+      let trans = this.queryId(
+          '=QUERY(' + spreadNames + '!A1:E, "Select A, B, C, D, E where A = \'' + transId.toUpperCase() + '\'",1)'
+        )[1];
+      return new transactionID(trans[0].toUpperCase(), trans[3], trans[1], trans[2], trans[4]);
+    }catch(e){
+      console.log(e);
+      return undefined;
     }
-    return undefined;
   }
 
-  getAccountID(accId, spreadNames, startRow){
+  getAccountID(accId, spreadNames){
     spreadNames = spreadNames || 'AccountId';
-    startRow = startRow || 1;
-    let data = this.spreadSheet.getSheetByName(spreadNames)
-    .getDataRange().getValues();
-    for(let i = startRow; i < data.length; i++){
-      if(accId == data[i][0]){
-        return new accountID(data[i][0], data[i][1],
-          data[i][2], data[i][3]);
-      }
+    try{
+      let acc = this.queryId(
+          '=QUERY(' + spreadNames + '!A1:E, "Select A, B, C, D, E where A = \'' + accId.toUpperCase() + '\'",1)'
+        )[1];
+      return new accountID(acc[0].toUpperCase(), acc[1], acc[2], acc[3]);
+    }catch(e){
+      console.log(e);
+      return undefined;
     }
-    return undefined; 
   }
 
-  getMessageId(msgId, spreadNames, startRow){
-    spreadNames = spreadNames || 'MessageId';
-    startRow = startRow || 1;
-    let data = this.spreadSheet.getSheetByName(spreadNames)
-    .getDataRange().getValues();
-    for(let i = startRow; i < data.length; i++){
-      if(msgId.toUpperCase() == data[i][0].toUpperCase()){
-        return new messageID(data[i][0].toUpperCase(), data[i][1], data[i][2]);
-      }
+  getMessageId(msgId){
+    try{
+      let msg = this.queryId(
+          '=QUERY(MessageId!A1:E, "Select A, B, C, D, E where A = \'' + msgId.toUpperCase() + '\'",1)'
+        )[1];
+      return new messageID(msg[0].toUpperCase(), msg[1], msg[2], msg[3]);
+    }catch(e){
+      console.log(e);
+      return undefined;
     }
-    return undefined;
   }
+
 }

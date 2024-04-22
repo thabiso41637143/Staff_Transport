@@ -26,9 +26,12 @@ class collectionDatabase {
   }
 
   queryData(query, querySheet){
+    let lock = LockService.getScriptLock();
+    lock.waitLock(400000);
     querySheet = querySheet || 'QuerySet';
     this.spreadSheet.getSheetByName(querySheet).getRange('A1').setValue(query);
     SpreadsheetApp.flush();
+    lock.releaseLock();
     return this.spreadSheet.getSheetByName(querySheet).getDataRange().getValues();
   }
   addNewTransaction(userId, transAmount, tripId, transType, summaryId){
@@ -156,19 +159,13 @@ class collectionDatabase {
    * 
    */
   getUserPaymentList(userId){
-    let paydata = this.queryData(
-      '=QUERY(CapturePayment!A:F,"Select A, B, C, D, E, F Where LOWER(B) contains \'' + userId.toLowerCase() + '\'",1)'
-    );
-    let lock = LockService.getScriptLock();
-    lock.waitLock(400000);
+    let paydata;
     try{
       paydata = this.queryData(
-        '=QUERY(CapturePayment!A:F,"Select A, B, C, D, E, F Where LOWER(B) contains \'' + userId.toLowerCase() + '\'",1)'
+        '=QUERY(CapturePayment!A:F,"Select A, B, C, D, E, F Where LOWER(B) = \'' + userId.toLowerCase() + '\'",1)'
       );
-      lock.releaseLock();
     }catch(e){
       console.error(e);
-      lock.releaseLock();
        return e;
     }
     let payList = [];
@@ -203,17 +200,13 @@ class collectionDatabase {
    * @return an object of trip using tripId
    */
   getTripId(tripId){
-    let lock = LockService.getScriptLock();
-    lock.waitLock(400000);
     let userTrip;
     try{
       userTrip = this.queryData(
         '=QUERY(CaptureTrip!A:I,"Select A, B, C, D, E, F, G, H, I Where LOWER(A) contains \'' + tripId.toLowerCase() + '\'",1)'
       );
-      lock.releaseLock();
     }catch(error){
       console.error(error);
-      lock.releaseLock();
       return error;
     }
     if(userTrip.length > 1){

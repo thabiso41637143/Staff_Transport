@@ -36,7 +36,7 @@ class updateUserTemplates{
     this.msgDoc = new document(userData[3], userData[1]);
 
     userData = this.getFile('User History');
-    this.allUserHist = new allUserData(userData[3], userData[1]);
+    this.allUserHist = new allUserData(this.userId, userData[3], userData[1]);
   }
   /**
    * 
@@ -90,8 +90,10 @@ class updateUserTemplates{
   /**
    * 
    */
-  updateUserHistory(rowData, spName){
-    
+  updateUserHistory(){
+    //console.info(this.allUserHist.updateAttendanceAlert());
+
+    console.info(this.allUserHist.updateCapturePayment());
     
   }
 }
@@ -178,50 +180,100 @@ class document {
  * 
  */
 class allUserData{
-  constructor(spreadSheetId, foldId){
+  constructor(userId, spreadSheetId, foldId){
+    this.userId = userId;
     this.folder = DriveApp.getFolderById(foldId);
     this.spreadSheetId = spreadSheetId;
     this.spreadSheet = SpreadsheetApp.openById(this.spreadSheetId);
   }
 
+  submitQuery(query, spreadSheetName){
+    spreadSheetName = spreadSheetName || 'QueryData';
+    this.spreadSheet.getSheetByName(spreadSheetName).getRange('A1').setValue(query);
+    SpreadsheetApp.flush();
+    return this.spreadSheet.getSheetByName(spreadSheetName).getRange().getValues();
+  }
+
   updateTransactionIDHistory(spreadSheetName){
+    spreadSheetName = spreadSheetName || 'TransactionIDHistory';
+    let spreadSheetData = this.spreadSheet.getSheetByName(spreadSheetName);
 
   }
 
   updatePaidTransactionHistory(spreadSheetName){
+    spreadSheetName = spreadSheetName || 'PaidTransactionHistory';
+    let spreadSheetData = this.spreadSheet.getSheetByName(spreadSheetName);
 
   }
 
   updateUnpaidTransactionHistory(spreadSheetName){
+    spreadSheetName = spreadSheetName || 'UnpaidTransactionHistory';
+    let spreadSheetData = this.spreadSheet.getSheetByName(spreadSheetName);
 
   }
 
   updateTripsIDHistory(spreadSheetName){
+    spreadSheetName = spreadSheetName || 'TripsIDHistory';
+    let spreadSheetData = this.spreadSheet.getSheetByName(spreadSheetName);
 
   }
 
   updatePaidTriphistory(spreadSheetName){
+    spreadSheetName = spreadSheetName || 'PaidTriphistory';
+    let spreadSheetData = this.spreadSheet.getSheetByName(spreadSheetName);
 
   }
 
   updateUnpaidTripHistory(spreadSheetName){
+    spreadSheetName = spreadSheetName || 'UnpaidTripHistory';
+    let spreadSheetData = this.spreadSheet.getSheetByName(spreadSheetName);
 
   }
 
   updateCapturePayment(spreadSheetName){
-    
+    spreadSheetName = spreadSheetName || 'CapturePayment';
+    let spreadSheetData = this.spreadSheet.getSheetByName(spreadSheetName);
+    let pay = new collectionDatabase();
+    let userPay = pay.getUserPaymentList(this.userId);
+    for(let i = 0; i < userPay.length; i++){
+      spreadSheetData.appendRow(userPay[i].getCapturePaymentList());
+      this.updatePaymentId(userPay[i].paymentId);
+    }
+    SpreadsheetApp.flush();
+    return 'Successfully updated the user payment'
   }
 
-  updatePaymentId(spreadSheetName){
-
+  updatePaymentId(payId, spreadSheetName){
+    spreadSheetName = spreadSheetName || 'PaymentId';
+    let payIdTrac = new idTracker();
+    this.spreadSheet.getSheetByName(spreadSheetName)
+    .appendRow(payIdTrac.getPaymentID(payId).getPaymentList());
   }
 
-  updateMessageId(spreadSheetName){
-
+  /**
+   * 
+   */
+  updateMessageId(msgId, spreadSheetName){
+    spreadSheetName = spreadSheetName || 'MessageId';
+    let msgIdTrac = new idTracker();
+    this.spreadSheet.getSheetByName(spreadSheetName)
+    .appendRow(msgIdTrac.getMessageId(msgId).getMsgDetailList());
   }
 
+  /**
+   * 
+   */
   updateAttendanceAlert(spreadSheetName){
-
+    spreadSheetName = spreadSheetName || 'AttendanceAlert';
+    let spreadSheetData = this.spreadSheet.getSheetByName(spreadSheetName);
+    let msg = new messages();
+    let userMsg = msg.getAttMsgList(this.userId, 'Read');
+    for(let i = 0; i < userMsg.length; i++){
+      spreadSheetData.appendRow(userMsg[i].getMessageList());
+      this.updateMessageId(userMsg[i].messageId);
+    }
+    SpreadsheetApp.flush();
+    return 'Successfully updated user alert messages.';
   }
 
 }
