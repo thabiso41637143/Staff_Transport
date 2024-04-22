@@ -1,9 +1,17 @@
+
+/**
+ * @author: Thabiso Mathebula
+ * 
+ */
 class collectionDatabase {
   constructor(spreadSheetId){
       this.spreadSheetId = spreadSheetId || '1-cVWfZgB1vRWT25P636wgCc-y-Zj3MWTkZSZ8cgqhDw';
       this.spreadSheet = SpreadsheetApp.openById(this.spreadSheetId);
   }
 
+  /**
+   * 
+   */
   addNewTrip(tripId, userId, amount, date, fromLoc, toLoc, status, driveId, spreadNames){
     try{
       status = status || 'Unpaid';
@@ -25,6 +33,9 @@ class collectionDatabase {
     }
   }
 
+  /**
+   * 
+   */
   queryData(query, querySheet){
     let lock = LockService.getScriptLock();
     lock.waitLock(400000);
@@ -34,6 +45,10 @@ class collectionDatabase {
     lock.releaseLock();
     return this.spreadSheet.getSheetByName(querySheet).getDataRange().getValues();
   }
+
+  /**
+   * 
+   */
   addNewTransaction(userId, transAmount, tripId, transType, summaryId){
     try{
       summaryId = summaryId || 209;
@@ -54,6 +69,9 @@ class collectionDatabase {
 
   }
 
+  /**
+   * 
+   */
   captureNewPayment(pymId, userId, pymDate, amount,driveId, spreadNames){
     try{
       spreadNames = spreadNames || 'CapturePayment';
@@ -81,6 +99,9 @@ class collectionDatabase {
     }
   }
 
+  /**
+   * 
+   */
   recordPaymentTransaction(transId, transType, transDate, transAmount, tripId, spreadNames){
     try{
       spreadNames = spreadNames || 'AccountTransaction';
@@ -115,6 +136,9 @@ class collectionDatabase {
     }
   }
 
+  /**
+   * 
+   */
   getCapturedPaymentMap(spreadNames, startRow){
     spreadNames = spreadNames || 'CapturePayment';
     startRow = startRow || 1;
@@ -135,23 +159,18 @@ class collectionDatabase {
    * New updated passenger trip
    */
   getPassCapturedTripMap(userid, spreadNames, querySpreadSheet){
-    let lock = LockService.getScriptLock();
-    lock.waitLock(400000);
     let useTripMap = new Map();
     spreadNames = spreadNames || 'CaptureTrip';
     querySpreadSheet = querySpreadSheet || 'QuerySet_2';
-    if(this.checkTransQuerySet(
+    let data = this.queryData(
       '=QUERY(' + spreadNames + '!A:I,"Select A, B, C, D, E, F, G, H, I Where G = \'Unpaid\' and B = \'' + userid.toUpperCase() + '\'",1)', querySpreadSheet
-      )){
-      let data = this.spreadSheet.getSheetByName(querySpreadSheet).getDataRange().getValues();
-      for(let i = 1; i < data.length; i++){
-        let trip  = new captureTrips(data[i][0].toUpperCase(), data[i][1].toUpperCase(), 
-        parseFloat(data[i][2]), new Date(data[i][3]), data[i][4], data[i][5], data[i][6].toLowerCase(), 
-        data[i][7].toUpperCase(), data[i][8]);
-        useTripMap[trip.tripId] = trip.getCaptureTripMap();
-      }
+    );
+    for(let i = 1; i < data.length; i++){
+      let trip  = new captureTrips(data[i][0].toUpperCase(), data[i][1].toUpperCase(), 
+      parseFloat(data[i][2]), new Date(data[i][3]), data[i][4], data[i][5], data[i][6].toLowerCase(), 
+      data[i][7].toUpperCase(), data[i][8]);
+      useTripMap[trip.tripId] = trip.getCaptureTripMap();
     }
-    lock.releaseLock();
     return useTripMap;
   }
 
@@ -159,15 +178,9 @@ class collectionDatabase {
    * 
    */
   getUserPaymentList(userId){
-    let paydata;
-    try{
-      paydata = this.queryData(
+    let  paydata = this.queryData(
         '=QUERY(CapturePayment!A:F,"Select A, B, C, D, E, F Where LOWER(B) = \'' + userId.toLowerCase() + '\'",1)'
-      );
-    }catch(e){
-      console.error(e);
-       return e;
-    }
+    );
     let payList = [];
     for(let i = 1; i < paydata.length; i++){
       payList.push(
@@ -177,6 +190,7 @@ class collectionDatabase {
     }
     return payList;
   }
+
   /**
    * return an object of a trip
    */
@@ -200,15 +214,9 @@ class collectionDatabase {
    * @return an object of trip using tripId
    */
   getTripId(tripId){
-    let userTrip;
-    try{
-      userTrip = this.queryData(
-        '=QUERY(CaptureTrip!A:I,"Select A, B, C, D, E, F, G, H, I Where LOWER(A) contains \'' + tripId.toLowerCase() + '\'",1)'
-      );
-    }catch(error){
-      console.error(error);
-      return error;
-    }
+    let  userTrip = this.queryData(
+        '=QUERY(CaptureTrip!A:I,"Select A, B, C, D, E, F, G, H, I Where LOWER(A) = \'' + tripId.toLowerCase() + '\'",1)'
+    );
     if(userTrip.length > 1){
       userTrip = userTrip[1];
       return new captureTrips(userTrip[0].toUpperCase(), userTrip[1].toUpperCase(), 
@@ -216,7 +224,6 @@ class collectionDatabase {
         userTrip[7].toUpperCase(), userTrip[8]);
     }
     return undefined;
-
   }
 
   /**
@@ -258,50 +265,59 @@ class collectionDatabase {
     return transMap;
   }
 
+  /**
+   * 
+   */
   getTransactionList(spreadNames, startRow){
     spreadNames = spreadNames || 'AccountTransaction';
     startRow = startRow || 1;
     return Object.values(this.getTransactionMap(spreadNames, startRow));
   }
 
+  /**
+   * 
+   */
   getTranQuerySetList(query, spreadNames, startRow){
-    let lock = LockService.getScriptLock();
-    lock.waitLock(200000);
     spreadNames = spreadNames || 'QuerySet';
     startRow = startRow || 1;
-    this.spreadSheet.getSheetByName(spreadNames).getRange('A1').setValue(query);
-    SpreadsheetApp.flush();
-    let data = this.spreadSheet.getSheetByName(spreadNames).getDataRange().getValues();
+    let data = this.queryData(query, spreadNames);
     let transList = [];
     for(let i = startRow; i < data.length; i++){
       transList.push(new accountTransaction(data[i][0].toUpperCase(), 
         data[i][1], data[i][2], data[i][3], data[i][4], data[i][5], data[i][6]));
     }
-    lock.releaseLock();
     return transList;
   }
 
+  /**
+   * 
+   */
   checkTransQuerySet(query, spreadNames){
-    let lock = LockService.getScriptLock();
-    lock.waitLock(200000);
     spreadNames = spreadNames || 'QuerySet_2';
-    this.spreadSheet.getSheetByName(spreadNames).getRange('A1').setValue(query);
-    SpreadsheetApp.flush();
-    lock.releaseLock();
-    return this.spreadSheet.getSheetByName(spreadNames).getDataRange().getValues().length > 1;
+    return this.queryData(query, spreadNames).length > 1;
   }
+
+  /**
+   * 
+   */
   getCapturedTripList(spreadNames, startRow){
     spreadNames = spreadNames || 'CaptureTrip';
     startRow = startRow || 1;
     return Object.values(this.getCapturedTripMap(spreadNames,  startRow));
   }
 
+  /**
+   * 
+   */
   getCapturedPaymentList(spreadNames, startRow){
     spreadNames = spreadNames || 'CapturePayment';
     startRow = startRow || 1;
     return Object.values(this.getCapturedPaymentMap(spreadNames, startRow));
   }
 
+  /**
+   * 
+   */
   getCapturedTrip(row, spreadNames){
     spreadNames = spreadNames || 'CaptureTrip';
     row = row || 1;
@@ -310,6 +326,10 @@ class collectionDatabase {
     return new captureTrips(data[row][0].toUpperCase(), data[row][1].toUpperCase(), parseFloat(data[row][2]),
         new Date(data[row][3]), data[row][4], data[row][5], data[row][6].toLowerCase());
   }
+
+  /**
+   * 
+   */
   getTransaction(userId){
     for(let i = 0; i < this.getTransactionList().length; i++){
       if(userId.toUpperCase() == this.getTransactionList()[i]){
@@ -318,6 +338,9 @@ class collectionDatabase {
     }
   }
 
+  /**
+   * 
+   */
   getCapturedPayment(row, spreadNames){
     spreadNames = spreadNames || 'CapturePayment';
     row = row || 1;
@@ -365,6 +388,13 @@ class collectionDatabase {
       console.error(e);
       return 'Failed to delete the row with trip id: '+ pymId;
     }
+  }
+
+  /**
+   * 
+   */
+  getCapturedPayment(payId){
+
   }
 
   updateCapturedPayment(pymId, head, details){
