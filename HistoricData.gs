@@ -193,4 +193,76 @@ class transactionHistory{
   /**
    * 
    */
+  getUnpaidPaidHistory(userId, spName){
+    spName = spName || 'QueryData';
+    let data = this.queryData(
+      '=QUERY(' + this.spreadsheetName + '!A:I, "select A, B, C, D, E, F, G, H, I Where B = \'' + userId + '\'",1)'
+      , spName);
+    let unpaidList = [];
+    for(let i = 1; i < data.length; i++){
+      unpaidList.push(
+        new captureTrips(data[i][0], data[i][1], data[i][2], generalFunctions.formatDate(data[i][3]), data[i][4],
+        data[i][5], data[i][6], data[i][7], data[i][8], this.spreadsheetId, this.spreadsheetName)
+      );
+    }
+    return unpaidList;
+  }
+
+  /**
+   * 
+   */
+  getUnpaidTransactionHistory(tripId, spName){
+    spName = spName || 'QueryData';
+    let data = this.queryData(
+      '=QUERY(' + this.spreadsheetName + '!A:H, "select A, B, C, D, E, F, G, H Where C = \'' + tripId + '\'",1)'
+      , spName);
+    let unpaidList = [];
+    for(let i = 1; i < data.length; i++){
+      unpaidList.push(
+        new accountTransaction(data[i][0], data[i][1], data[i][2], data[i][3], generalFunctions.formatDate(data[i][4]),
+        parseFloat(data[i][5]).toFixed(2), parseFloat(data[i][6]).toFixed(2), data[i][7], 
+        this.spreadsheetId, this.spreadsheetName)
+      );
+    }
+    return unpaidList;
+  }
+}
+
+/**
+ * 
+ */
+class paidTransactionHistory{
+  constructor(transId, accNumb, tripId, transType, transDate, transAmt, bal, 
+  payDate, payAmount, outAmount, spreadSheetId, spreadSheetName){
+    
+    
+    this.spreadSheetId = spreadSheetId ||'1ouUI-GCrIPcGPrjlnAvRhgS9p9fZ2BGKOamcfp87rd8';
+    this.spreadSheetName = spreadSheetName || 'PaidTransactionHistory';
+    this.spreadSheetData = SpreadsheetApp
+      .openById(this.spreadSheetId)
+      .getSheetByName(this.spreadSheetName);
+    this.accTrans = new accountTransaction(transId, accNumb, tripId, transType,
+      transDate, transAmt, bal, '', this.spreadSheetId, this.spreadSheetName);
+    this.payDate = payDate;
+    this.payAmount = payAmount;
+    this.outAmount = outAmount;
+  }
+
+  /**
+   * 
+   */
+  getpaidTranList(){
+    let transList = this.accTrans.getTransactionList();
+    transList.push(generalFunctions.formatDate(this.payDate));
+    transList.push(parseFloat(this.payAmount).toFixed(2));
+    transList.push(parseFloat(this.outAmount).toFixed(2));
+    return transList;
+  }
+
+  /**
+   * 
+   */
+  queryData(){
+    
+  }
 }

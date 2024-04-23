@@ -28,6 +28,9 @@ class updateUserTemplates{
     )[1];
   }
 
+  /**
+   * 
+   */
   initFiles(){
     let userData = this.getFile('trip history');
     this.payTripHist = new document(userData[3], userData[1]);
@@ -38,6 +41,7 @@ class updateUserTemplates{
     userData = this.getFile('User History');
     this.allUserHist = new allUserData(this.userId, userData[3], userData[1]);
   }
+
   /**
    * 
    */
@@ -93,7 +97,11 @@ class updateUserTemplates{
   updateUserHistory(){
     //console.info(this.allUserHist.updateAttendanceAlert());
 
-    console.info(this.allUserHist.updateCapturePayment());
+    // console.info(this.allUserHist.updateCapturePayment());
+
+    console.info(this.allUserHist.updateUnpaidTripHistory());
+
+    //console.info(this.allUserHist.updateUnpaidTransactionHistory());
     
   }
 }
@@ -206,18 +214,26 @@ class allUserData{
 
   }
 
-  updateUnpaidTransactionHistory(spreadSheetName){
+  updateUnpaidTransactionHistory(tripId, spreadSheetName){
     spreadSheetName = spreadSheetName || 'UnpaidTransactionHistory';
-    let spreadSheetData = this.spreadSheet.getSheetByName(spreadSheetName);
-
+    let unpaidTransHist = new transactionHistory(spreadSheetName);
+    let transList = unpaidTransHist.getUnpaidTransactionHistory(tripId);
+    for(let i = 0; i < transList.length; i++){
+       this.spreadSheet.getSheetByName(spreadSheetName).appendRow(transList[i].getTransactionList());
+    }
   }
 
-  updateTripsIDHistory(spreadSheetName){
+  updateTripsIDHistory(tripId, spreadSheetName){
     spreadSheetName = spreadSheetName || 'TripsIDHistory';
-    let spreadSheetData = this.spreadSheet.getSheetByName(spreadSheetName);
+    let tripIdTrac = new idTracker('1ouUI-GCrIPcGPrjlnAvRhgS9p9fZ2BGKOamcfp87rd8');
+    this.spreadSheet.getSheetByName(spreadSheetName)
+    .appendRow(tripIdTrac.gettripsID(tripId, spreadSheetName, 'QueryData').getTripIdList());
+    this.updateUnpaidTransactionHistory(tripId);
 
   }
-
+  /**
+   * Work on it later.
+   */
   updatePaidTriphistory(spreadSheetName){
     spreadSheetName = spreadSheetName || 'PaidTriphistory';
     let spreadSheetData = this.spreadSheet.getSheetByName(spreadSheetName);
@@ -226,8 +242,13 @@ class allUserData{
 
   updateUnpaidTripHistory(spreadSheetName){
     spreadSheetName = spreadSheetName || 'UnpaidTripHistory';
-    let spreadSheetData = this.spreadSheet.getSheetByName(spreadSheetName);
-
+    let unpaidTrip = new transactionHistory(spreadSheetName);
+    let tripList = unpaidTrip.getUnpaidPaidHistory(this.userId);
+    for(let i = 0; i < tripList.length; i++){
+      this.spreadSheet.getSheetByName(spreadSheetName).appendRow(tripList[i].getCaptureTripsList());
+      this.updateTripsIDHistory(tripList[i].tripId);
+    }
+    return 'Successfully updated the user trip history';
   }
 
   updateCapturePayment(spreadSheetName){
@@ -240,7 +261,7 @@ class allUserData{
       this.updatePaymentId(userPay[i].paymentId);
     }
     SpreadsheetApp.flush();
-    return 'Successfully updated the user payment'
+    return 'Successfully updated the user payment.';
   }
 
   updatePaymentId(payId, spreadSheetName){

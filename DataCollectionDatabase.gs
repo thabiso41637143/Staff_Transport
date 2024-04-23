@@ -66,7 +66,6 @@ class collectionDatabase {
       + [userId, transAmount, transType]);
       return -1;
     }
-
   }
 
   /**

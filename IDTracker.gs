@@ -8,6 +8,7 @@ class idTracker {
     let lock = LockService.getScriptLock();
     lock.waitLock(400000);
     spreadNames = spreadNames || 'ReadQueryData';
+    //console.info([query, spreadNames, this.spreadSheetId]);
     this.spreadSheet.getSheetByName(spreadNames)
     .getRange('A1').setValue(query);
     SpreadsheetApp.flush();
@@ -74,13 +75,14 @@ class idTracker {
     }
   }
 
-  gettripsID(tripId, spreadNames){
+  gettripsID(tripId, spreadNames, spName){
     spreadNames = spreadNames || 'TripsId';
+    spName = spName || 'ReadQueryData';
     try{
       let trip = this.queryId(
-          '=QUERY(' + spreadNames + '!A1:E, "Select A, B, C, D, E where A = \'' + tripId.toUpperCase() + '\'",1)'
+          '=QUERY(' + spreadNames + '!A1:E, "Select A, B, C, D, E where A = \'' + tripId.toUpperCase() + '\'",1)', spName
         )[1];
-      return new paymentID(trip[0].toUpperCase(), trip[1], trip[2], trip[3]);
+      return new tripsID(trip[0].toUpperCase(), trip[1], trip[2], trip[3]);
     }catch(e){
       console.log(e);
       return undefined;
