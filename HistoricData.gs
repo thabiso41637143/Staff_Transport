@@ -253,6 +253,7 @@ class paidTransactionHistory{
    */
   getpaidTranList(){
     let transList = this.accTrans.getTransactionList();
+    transList.pop();
     transList.push(generalFunctions.formatDate(this.payDate));
     transList.push(parseFloat(this.payAmount).toFixed(2));
     transList.push(parseFloat(this.outAmount).toFixed(2));
@@ -263,6 +264,47 @@ class paidTransactionHistory{
    * 
    */
   queryData(){
-    
+
+  }
+}
+
+/**
+ * 
+ */
+class paidTriphistory{
+  constructor(tripId, userId, tripAmount, tripDate, fromLocation, toLocation, status, driverId,
+   paidDate, amountPaid, remainAmount, spreadSheetId, spreadSheetName){
+
+    this.spreadSheetId = spreadSheetId ||'1ouUI-GCrIPcGPrjlnAvRhgS9p9fZ2BGKOamcfp87rd8';
+    this.spreadSheetName = spreadSheetName || 'PaidTriphistory';
+    this.spreadSheetData = SpreadsheetApp
+      .openById(this.spreadSheetId)
+      .getSheetByName(this.spreadSheetName); 
+    this.paidTripHist = new captureTrips(
+      tripId, userId, tripAmount, tripDate, fromLocation, toLocation, status, driverId, '', 
+      this.spreadSheetId, this.spreadSheetName
+    );
+    this.paidDate = paidDate;
+    this.amountPaid = amountPaid;
+    this.amountRemain = remainAmount;
+  }
+
+  /**
+   * 
+   */
+  getPaidTripList(){
+    let tripList = this.paidTripHist.getCaptureTripsList();
+    tripList.pop();
+    tripList.push(generalFunctions.formatDate(this.paidDate));
+    tripList.push(parseFloat(this.amountPaid).toFixed(2));
+    tripList.push(parseFloat(this.amountRemain).toFixed(2));
+    return tripList;
+  }
+
+  /**
+   * 
+   */
+  queryData(){
+
   }
 }
