@@ -106,6 +106,7 @@ class updateUserTemplates{
     //console.info(this.allUserHist.updatePaidTriphistory());
 
     //console.info(this.allUserHist.updatePaidTransactionHistory());
+    console.info(this.allUserHist.getUrl());
     
   }
 }
@@ -199,6 +200,12 @@ class allUserData{
     this.spreadSheet = SpreadsheetApp.openById(this.spreadSheetId);
   }
 
+  /**
+   * 
+   */
+  getUrl(){
+    return this.spreadSheet.getUrl();
+  }
   /**
    * 
    */
