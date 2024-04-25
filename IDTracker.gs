@@ -77,29 +77,27 @@ class idTracker {
   gettripsID(tripId, spreadNames, spName){
     spreadNames = spreadNames || 'TripsId';
     spName = spName || 'ReadQueryData';
-    try{
-      let trip = this.queryId(
-          '=QUERY(' + spreadNames + '!A1:E, "Select A, B, C, D, E where A = \'' + tripId.toUpperCase() + '\'",1)', spName
-        )[1];
-      return new tripsID(trip[0].toUpperCase(), trip[1], trip[2], trip[3]);
-    }catch(e){
-      console.log(e);
-      return undefined;
+    let trip = this.queryId(
+        '=QUERY(' + spreadNames + '!A1:E, "Select A, B, C, D, E where A = \'' + tripId.toUpperCase() + '\'",1)', spName
+      );
+    if(trip.length > 1){
+      trip = trip[1];
+      return new tripsID(trip[0].toUpperCase(), trip[1], trip[2], trip[3], spreadNames, this.spreadSheetId);
     }
+    return 1;
   }
 
   getTransID(transId, spreadNames, spName){
     spreadNames = spreadNames || 'AccountTransactionId';
     spName = spName || 'ReadQueryData';
-    try{
-      let trans = this.queryId(
-          '=QUERY(' + spreadNames + '!A1:E, "Select A, B, C, D, E where A = \'' + transId.toUpperCase() + '\'",1)', spName
-        )[1];
-      return new transactionID(trans[0].toUpperCase(), trans[3], trans[1], trans[2], trans[4]);
-    }catch(e){
-      console.log(e);
-      return undefined;
-    }
+    let trans = this.queryId(
+        '=QUERY(' + spreadNames + '!A1:E, "Select A, B, C, D, E where A = \'' + transId.toUpperCase() + '\'",1)', spName
+      );
+    if(trans.length > 1){
+      trans = trans[1];
+      return new transactionID(trans[0].toUpperCase(), trans[3], trans[1], trans[2], trans[4], spreadNames, this.spreadSheetId);
+    } 
+    return 1;
   }
 
   getAccountID(accId, spreadNames){

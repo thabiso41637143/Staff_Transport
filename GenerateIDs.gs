@@ -331,6 +331,7 @@ class transactionID{
     return transList;
   }
 }
+
 /**
  * 
  */
@@ -420,9 +421,11 @@ class generatedIDs{
     console.log('Successfully created new id with the following details:\n' + this.getGeneratedIDList());
     return this.generatedId.toUpperCase();
   }
+
   getGeneratedIDList(){
     return [this.generatedId.toUpperCase(), this.groupId, this.status];
   }
+  
   getRowNumber(colNumber){
     colNumber = colNumber || 0;
     let data = this.spreadSheetData.getDataRange().getValues();
@@ -451,6 +454,7 @@ class generatedIDs{
   updateStatus(status, col){
     try{
       col = col || 3;
+      this.status = status;
       return this.updateSpreadSheetCell(this.getRowNumber() + 1, col, status,
           'Successfully updated status for ID: ' + this.generatedId + ' to: '+ status);
     }catch(e){

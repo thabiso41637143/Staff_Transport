@@ -8,7 +8,7 @@ class accountTransaction{
     this.accountNumb = parseInt(accNumb);
     this.tripId = tripId;
     this.transType = transType;
-    this.transDate = new Date(transDate);
+    this.transDate = generalFunctions.formatDate(transDate);
     this.transAmount = parseFloat(transAmt);
     this.accountBalance = parseFloat(bal);
     this.comments = comm || '';
@@ -44,8 +44,8 @@ class accountTransaction{
     this.getTransactionMap() + "\nRow Number: " + rowNumb;
   }
   getTransactionList(){
-    return [this.transId, this.accountNumb,this.tripId, this.transType, this.transDate,
-      this.transAmount, this.accountBalance, this.comments];
+    return [this.transId, this.accountNumb,this.tripId, this.transType, generalFunctions.formatDate(this.transDate),
+      parseFloat(this.transAmount).toFixed(2), parseFloat(this.accountBalance).toFixed(2), this.comments];
   }
 
   getTransactionMap(rowHeading, header){

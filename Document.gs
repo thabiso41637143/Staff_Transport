@@ -214,13 +214,18 @@ class allUserData{
    */
   updateTransactionIDHistory(transId, spreadSheetName){
     spreadSheetName = spreadSheetName || 'TransactionIDHistory';
-    let spreadSheetData = this.spreadSheet.getSheetByName(spreadSheetName);
     let tId = new idTracker(
         '1ouUI-GCrIPcGPrjlnAvRhgS9p9fZ2BGKOamcfp87rd8'
       );
-    this.spreadSheet.getSheetByName(spreadSheetName)
-      .appendRow(tId.getTransID(transId, spreadSheetName, 'QueryData').getTransactionList());
-    return 'Successfully updated transaction Id history.';
+    let id = tId.getTransID(transId, spreadSheetName, 'QueryData');
+    if(id != 1){
+      id.tranId.updateStatus('Closed');
+      this.spreadSheet.getSheetByName(spreadSheetName)
+        .appendRow(id.getTransactionList());
+      id.tranId.removeId();
+      return 'Successfully updated transaction Id history.';
+    }
+    return 'Id object was not found.';
   }
 
   /**
@@ -233,6 +238,7 @@ class allUserData{
     for(let i = 0; i < transHistList.length; i++){
       this.spreadSheet.getSheetByName(spreadSheetName)
       .appendRow(transHistList[i].getpaidTranList());
+      transHistList[i].accTrans.removeTransact();
     }
     console.info(this.updateTransactionIDHistory(transId));
     return 'Successfully update paid transaction history.';
@@ -247,8 +253,9 @@ class allUserData{
     let unpaidTransHist = new transactionHistory(spreadSheetName);
     let transList = unpaidTransHist.getUnpaidTransactionHistory(tripId);
     for(let i = 0; i < transList.length; i++){
-       this.spreadSheet.getSheetByName(spreadSheetName).appendRow(transList[i].getTransactionList());
-       if(i == 0) console.info(this.updatePaidTransactionHistory(transList[i].transId));
+      this.spreadSheet.getSheetByName(spreadSheetName).appendRow(transList[i].getTransactionList());
+      if(i == 0) console.info(this.updatePaidTransactionHistory(transList[i].transId));
+      transList[i].removeTransact();
     }
     return 'Succefully updated the unpaid transaction history.';
   }
@@ -259,11 +266,17 @@ class allUserData{
   updateTripsIDHistory(tripId, spreadSheetName){
     spreadSheetName = spreadSheetName || 'TripsIDHistory';
     let tripIdTrac = new idTracker('1ouUI-GCrIPcGPrjlnAvRhgS9p9fZ2BGKOamcfp87rd8');
-    this.spreadSheet.getSheetByName(spreadSheetName)
-    .appendRow(tripIdTrac.gettripsID(tripId, spreadSheetName, 'QueryData').getTripIdList());
-    console.info(this.updatePaidTriphistory(tripId));
-    console.info(this.updateUnpaidTransactionHistory(tripId));
-    return 'Successfully updated trip id history.';
+    let tId = tripIdTrac.gettripsID(tripId, spreadSheetName, 'QueryData');
+    if(tId != 1){
+      tId.tripId.updateStatus('Closed');
+      this.spreadSheet.getSheetByName(spreadSheetName)
+      .appendRow(tId.getTripIdList());
+      console.info(this.updatePaidTriphistory(tripId));
+      console.info(this.updateUnpaidTransactionHistory(tripId));
+      tId.tripId.removeId();
+      return 'Successfully updated trip id history.';
+    }
+    return 'The trip id with ' + tripId + ' is not found';
   }
 
   /**
@@ -275,6 +288,7 @@ class allUserData{
     let ptripList = paidTrips.getTripById(tripId);
     for(let i = 0; i < ptripList.length; i++){
       this.spreadSheet.getSheetByName(spreadSheetName).appendRow(ptripList[i].getPaidTripList());
+      console.info(ptripList[i].paidTripHist.removeTrip());
     }
     return 'Successsfully updated paid trip history.';
   }
@@ -289,6 +303,7 @@ class allUserData{
     for(let i = 0; i < tripList.length; i++){
       this.spreadSheet.getSheetByName(spreadSheetName).appendRow(tripList[i].getCaptureTripsList());
       console.info(this.updateTripsIDHistory(tripList[i].tripId));
+      console.info(tripList[i].removeTrip());
     }
     return 'Successfully updated the user trip history';
   }
@@ -304,6 +319,7 @@ class allUserData{
     for(let i = 0; i < userPay.length; i++){
       spreadSheetData.appendRow(userPay[i].getCapturePaymentList());
       console.info(this.updatePaymentId(userPay[i].paymentId));
+      userPay[i].removePayment();
     }
     SpreadsheetApp.flush();
     return 'Successfully updated the user payment.';
@@ -315,8 +331,10 @@ class allUserData{
   updatePaymentId(payId, spreadSheetName){
     spreadSheetName = spreadSheetName || 'PaymentId';
     let payIdTrac = new idTracker();
+    payIdTrac.getPaymentID(payId).paymentId.updateStatus('Closed');
     this.spreadSheet.getSheetByName(spreadSheetName)
     .appendRow(payIdTrac.getPaymentID(payId).getPaymentList());
+    console.info(payIdTrac.getPaymentID(payId).paymentId.removeId());
     return 'Successfully updated payment id.';
   }
 
@@ -326,8 +344,10 @@ class allUserData{
   updateMessageId(msgId, spreadSheetName){
     spreadSheetName = spreadSheetName || 'MessageId';
     let msgIdTrac = new idTracker();
+    msgIdTrac.getMessageId(msgId).messageId.updateStatus('Closed');
     this.spreadSheet.getSheetByName(spreadSheetName)
     .appendRow(msgIdTrac.getMessageId(msgId).getMsgDetailList());
+    console.info(msgIdTrac.getMessageId(msgId).messageId.removeId());
     return 'Successfully updated message id.'
   }
 
@@ -336,12 +356,12 @@ class allUserData{
    */
   updateAttendanceAlert(spreadSheetName){
     spreadSheetName = spreadSheetName || 'AttendanceAlert';
-    let spreadSheetData = this.spreadSheet.getSheetByName(spreadSheetName);
     let msg = new messages();
     let userMsg = msg.getAttMsgList(this.userId, 'Read');
     for(let i = 0; i < userMsg.length; i++){
-      spreadSheetData.appendRow(userMsg[i].getMessageList());
-      this.updateMessageId(userMsg[i].messageId);
+      this.spreadSheet.getSheetByName(spreadSheetName).appendRow(userMsg[i].getMessageList());
+      console.info(this.updateMessageId(userMsg[i].messageId));
+      userMsg[i].deleteMsg();
     }
     SpreadsheetApp.flush();
     return 'Successfully updated user alert messages.';
