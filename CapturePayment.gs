@@ -24,6 +24,9 @@ class capturePayment {
     return -1;
   }
 
+  removePayment(){
+    this.spreadSheetData.deleteRow(this.getRowNumber() + 1);
+  }
   getCapturePaymentList(){
     return [this.paymentId, this.userId, 
     Utilities.formatDate(new Date(this.paymentDate), 'GMT+0200', 'd MMMM yyyy'), this.amountPayed, this.driverId];
@@ -95,5 +98,4 @@ class capturePayment {
       return 'An error occured while trying to update trip Amount to R'+ amt;
     }
   }
-  
 }
