@@ -2,360 +2,350 @@
 /**
  * 
  */
-class historicData {
-  constructor(spreadSheetId){
-      this.spreadSheetId = spreadSheetId || '1XrMH9XoaiWMG3RfcdUM21wj1T8nGGWs_DsY8rcODaAQ';
-      this.spreadSheet = SpreadsheetApp.openById(this.spreadSheetId);
-  }
+class updateUserTemplates{
+  constructor(userId, spreadSheetName, spreadSheetId){
 
-  addTripAttHistory(appId, driverId, passId, amt, attTripDate, fromLoc, toLoc, status, captDateTime){
-    let attTripHist = new tripsAttendanceHistory(appId, driverId, passId, amt, attTripDate, fromLoc, toLoc, status, captDateTime);
-    attTripHist.captureAttTrip();
-  }
-
-  addPayTripHistory(userId,	passId,	amount, paydate, status, dateCaptured, payId, stDate, spName){
-    spName = spName || 'PaymentHistory';
-    let payHist = new tripPaymentHistory(userId,	passId,	amount, paydate, status, dateCaptured, payId, stDate, spName);
-    payHist.capturePayment();
-  }
-
-  addCapPassHistory(userId,	groupId,	fullName,	contacts,	
-    userType,	homeLoc,	collectionLoc,	email, status, row, dateCap){
-    let capPassHist = new capPassHistory(userId,	groupId,	fullName,	contacts,	
-    userType,	homeLoc,	collectionLoc,	email, status, row, dateCap);
-    capPassHist.captureCapPassHist();
-  }
-}
-
-/**
- * 
- */
-class tripsAttendanceHistory{
-  constructor(appId, driverId, passId, amt, attTripDate, fromLoc, toLoc, status, captDateTime, spreadSheetName, spreadSheetId){
-    this.captDateTime = captDateTime;
-    this.appId = appId;
-    this.driverId = driverId;
-    this.passId = passId;
-    this.amount = amt;
-    this.attTripDate = attTripDate;
-    this.fromLoc = fromLoc;
-    this.toLoc = toLoc;
-    this.status = status;
-    this.spreadSheetName = spreadSheetName || 'TripsAttendanceHistory';
-    this.spreadSheetId = spreadSheetId || '1XrMH9XoaiWMG3RfcdUM21wj1T8nGGWs_DsY8rcODaAQ';
-    this.spreadSheetData = SpreadsheetApp.openById(this.spreadSheetId)
-      .getSheetByName(this.spreadSheetName);
-    this.spreadSheet = SpreadsheetApp.openById(this.spreadSheetId);
-  }
-
-  attTripList(){
-    return [this.captDateTime, this.appId, this.driverId, this.passId, this.amount,
-      this.attTripDate, this.fromLoc, this.toLoc, this.status];
-  }
-
-  getRowNumber(colNumber){
-    colNumber = colNumber || 1;
-    let data = this.spreadSheetData.getDataRange().getValues();
-    for(let i = 0; i < data.length; i++){
-      if(data[i][colNumber].toString().toUpperCase() == this.appId){
-        return i;
-      }
-    }
-    return -1;
-  }
-
-  captureAttTrip(){
-    this.spreadSheetData.appendRow(this.attTripList());
-    SpreadsheetApp.flush();
-  }
-}
-
-/**
- * 
- */
-class tripPaymentHistory{
-  constructor(userId,	passId,	amount, paydate, status, dateCaptured, payId, stDate, spreadSheetName, spreadSheetId){
     this.userId = userId;
-    this.passId = passId;
-    this.amount = amount;
-    this.paydate = paydate;
-    this.status = status;
-    this.paymentId = payId || '';
-    this.statusDate = stDate || generalFunctions.formatDateTime();
-    this.dateCaptured =  dateCaptured;
-    this.spreadSheetName = spreadSheetName || 'PaymentHistory';
-    this.spreadSheetId = spreadSheetId || '1XrMH9XoaiWMG3RfcdUM21wj1T8nGGWs_DsY8rcODaAQ';
+    this.payTripHist;
+    this.msgDoc;
+    this.allUserHist;
+    this.userDatabase = new transportDatabaseSheet();
+    this.dataColl = new collectionDatabase();
+    this.spreadSheetName = spreadSheetName || 'UserFiles';
+    this.spreadSheetId = spreadSheetId || '1Xsh3_Z_BvmSJw11CN_8PAXf1x-QPflEHTlN7jX2WXTA';
     this.spreadSheetData = SpreadsheetApp.openById(this.spreadSheetId)
       .getSheetByName(this.spreadSheetName);
     this.spreadSheet = SpreadsheetApp.openById(this.spreadSheetId);
+    this.initFiles();
   }
 
-  tripPaymentList(){
-    return [this.dateCaptured , this.userId, this.passId, 
-            this.amount, this.paydate, this.status];
+  /**
+   * 
+   */
+  getFile(filePurpose){
+    return this.queryFiles(
+      '=QUERY(UserFiles!A:H,"Select A, B, C, D, E, F, G, H Where A = \'' + this.userId + '\' and LOWER(G) contains \'' + filePurpose.toLowerCase() + '\'",1)'
+    )[1];
   }
 
-  capturePayment(){
-    let tempList = this.tripPaymentList();
-    tempList.push(this.paymentId);
-    tempList.push(this.statusDate);
-    this.spreadSheetData.appendRow(tempList);
+  /**
+   * 
+   */
+  initFiles(){
+    let userData = this.getFile('trip history');
+    this.payTripHist = new document(userData[3], userData[1]);
+
+    userData = this.getFile('Message Report');
+    this.msgDoc = new document(userData[3], userData[1]);
+
+    userData = this.getFile('User History');
+    this.allUserHist = new allUserData(this.userId, userData[3], userData[1]);
+  }
+
+  /**
+   * 
+   */
+  queryFiles(query, spName){
+    spName = spName || 'QuerySet';
+    this.spreadSheet.getSheetByName(spName).getRange('A1').setValue(query);
     SpreadsheetApp.flush();
+    return  this.spreadSheet.getSheetByName(spName).getDataRange().getValues();
+  }
+
+  /**
+   * 
+   */
+  updateUserTripHistory(){
+    //replacing text from the document
+    this.payTripHist.replaceText({'<<PASSENGERNAME>>': this.userDatabase.getUser(this.userId).userFullNames});
+
+    //updating the payment table
+    let userPayList = new collectionDatabase();
+    userPayList = userPayList.getUserPaymentList(this.userId);
+    for(let i = 0; i < userPayList.length; i++){
+      console.info(this.payTripHist.
+      addToRow([userPayList[i].userId, userPayList[i].paymentDate, 'R ' + userPayList[i].amountPayed.toFixed(2)], 0, 1));
+    }
+    
+    //updating the trip table.
+    let userTripList = new transactionHistory()
+    userTripList = userTripList.getUserPaidHistory(this.userId);
+    for(let i = 0; i < userTripList.length; i++){
+      console.info(this.payTripHist.addToRow(userTripList[i], 1, 1));
+    }
+    this.payTripHist.closeDoc();
+  }
+
+  /**
+   * 
+   */
+  updateUserMsgReport(){
+    //replacing text from the document
+    this.msgDoc.replaceText({'<<passengername>>': this.userDatabase.getUser(this.userId).userFullNames});
+    let userMsg = new messages();
+    let userMsgList = userMsg.getAttMsgList(this.userId);
+    for(let i = 0; i < userMsgList.length; i++){
+      console.info(this.msgDoc.insertParag(userMsgList[i].printMsg()));
+      console.info(this.msgDoc.drawLine());
+    }
+    this.msgDoc.closeDoc();
+  }
+
+  /**
+   * 
+   */
+  updateUserHistory(){
+    console.info(this.allUserHist.updateAttendanceAlert());
+
+    //console.info(this.allUserHist.updateCapturePayment());
+
+    //console.info(this.allUserHist.updateUnpaidTripHistory());
+
+    //console.info(this.allUserHist.updateUnpaidTransactionHistory());
+
+    //console.info(this.allUserHist.updatePaidTriphistory());
+
+    //console.info(this.allUserHist.updatePaidTransactionHistory());
+    
   }
 }
 
 /**
  * 
  */
-class capPassHistory{
-  constructor(userId,	groupId,	fullName,	contacts,	
-    userType,	homeLoc,	collectionLoc,	email, status, row, dateCap, spreadSheetName, spreadSheetId){
-    this.row = row || 1;
-    this.email = email;
-    this.status = status;
-    this.collectionLoc = collectionLoc;
-    this.homeLoc = homeLoc;
-    this.userType = userType;
-    this.contacts = contacts;
-    this.fullName = fullName;
-    this.groupId = groupId;
+class document {
+  constructor(docId, foldId, spreadSheetName, spreadSheetId){
+    this.document = DocumentApp.openById(docId);
+    this.folder = DriveApp.getFolderById(foldId);
+    this.doc = ABSALUMINUM.getDocument(this.document, this.folder);
+
+    this.spreadSheetName = spreadSheetName || 'CreatedFiles';
+    this.spreadSheetId = spreadSheetId || '1-cVWfZgB1vRWT25P636wgCc-y-Zj3MWTkZSZ8cgqhDw';
+    this.spreadSheetData = SpreadsheetApp.openById(this.spreadSheetId)
+      .getSheetByName(this.spreadSheetName);
+    this.spreadSheet = SpreadsheetApp.openById(this.spreadSheetId);
+
+  }
+
+  /**
+   * 
+   */
+  insertParag(text, pos){
+    pos = pos || 2;
+    text = text || '';
+    return this.doc.addParagraph(pos, text);
+  }
+
+  /**
+   * 
+   */
+  drawLine(pos){
+    pos = pos || 2;
+    return this.doc.addHorizontalLine(pos);
+  }
+
+  /**
+   * 
+   */
+  createPDF(){
+    console.info(this.doc.createPDFDocument());
+    this.spreadSheetData.appendRow(this.doc.getPDFDetailsList());
+    return 'Created a PFD file with the following details: \n' + this.doc.getPDFDetailsList();
+  }
+
+  replaceText(textReplace){
+    this.doc.textReplace = textReplace;
+    console.info(this.doc.replaceTextDetails());
+  }
+
+  addRow(rowCont, tablePos){
+    tablePos = tablePos || 0;
+    return this.doc.addRow(rowCont, tablePos);
+  }
+
+  addToRow(cont, tablePos, rowNumb){
+    rowNumb = rowNumb || 1;
+    if(this.doc.addContToRow(cont, tablePos, rowNumb)){
+      this.addRow(cont, tablePos);
+    }
+    return 'Succefully update the table with the following contents: \n' + cont;
+  }
+
+  getDocTables(){
+    return this.doc.getTableList();
+  }
+
+  getDocUrl(){
+    return this.doc.getDocUrl();
+  }
+
+  setViewAccess(){
+    return this.doc.shareViewAccess();
+  }
+
+  closeDoc(){
+    this.doc.closeDoc();
+  }
+}
+
+/**
+ * 
+ */
+class allUserData{
+  constructor(userId, spreadSheetId, foldId){
     this.userId = userId;
-    this.dateCap = dateCap;
-    this.spreadSheetName = spreadSheetName || 'CapturePassengerHistory';
-    this.spreadSheetId = spreadSheetId || '1XrMH9XoaiWMG3RfcdUM21wj1T8nGGWs_DsY8rcODaAQ';
-    this.spreadSheetData = SpreadsheetApp.openById(this.spreadSheetId)
-      .getSheetByName(this.spreadSheetName);
+    this.folder = DriveApp.getFolderById(foldId);
+    this.spreadSheetId = spreadSheetId;
     this.spreadSheet = SpreadsheetApp.openById(this.spreadSheetId);
   }
 
-  capPassHistList(){
-    return [generalFunctions.formatDateTime(this.dateCap), this.userId, this.groupId, this.fullName, this.contacts,
-      this.userType, this.homeLoc, this.collectionLoc, this.email, this.status];
-  }
-
-  captureCapPassHist(){
-    this.spreadSheetData.appendRow(this.capPassHistList());
+  /**
+   * 
+   */
+  submitQuery(query, spreadSheetName){
+    spreadSheetName = spreadSheetName || 'QueryData';
+    this.spreadSheet.getSheetByName(spreadSheetName).getRange('A1').setValue(query);
     SpreadsheetApp.flush();
-  }
-}
-
-/**
- * 
- */
-class transactionHistory{
-  constructor(spreadsheetName, spreadsheetId){
-    this.spreadsheetName = spreadsheetName;
-    this.spreadsheetId = spreadsheetId || '1ouUI-GCrIPcGPrjlnAvRhgS9p9fZ2BGKOamcfp87rd8';
-    this.spreadsheet = SpreadsheetApp.openById(this.spreadsheetId);
+    return this.spreadSheet.getSheetByName(spreadSheetName).getRange().getValues();
   }
 
   /**
    * 
    */
-  addTrans(data, spName){
-    this.spreadsheetName = spName;
-    this.spreadsheet.getSheetByName(this.spreadsheetName).appendRow(data);
+  updateTransactionIDHistory(transId, spreadSheetName){
+    spreadSheetName = spreadSheetName || 'TransactionIDHistory';
+    let spreadSheetData = this.spreadSheet.getSheetByName(spreadSheetName);
+    let tId = new idTracker(
+        '1ouUI-GCrIPcGPrjlnAvRhgS9p9fZ2BGKOamcfp87rd8'
+      );
+    this.spreadSheet.getSheetByName(spreadSheetName)
+      .appendRow(tId.getTransID(transId, spreadSheetName, 'QueryData').getTransactionList());
+    return 'Successfully updated transaction Id history.';
+  }
+
+  /**
+   * 
+   */
+  updatePaidTransactionHistory(transId, spreadSheetName){
+    spreadSheetName = spreadSheetName || 'PaidTransactionHistory';
+    let transHist = new transactionHistory(spreadSheetName);
+    let transHistList = transHist.getPaidTrans(transId);
+    for(let i = 0; i < transHistList.length; i++){
+      this.spreadSheet.getSheetByName(spreadSheetName)
+      .appendRow(transHistList[i].getpaidTranList());
+    }
+    console.info(this.updateTransactionIDHistory(transId));
+    return 'Successfully update paid transaction history.';
+
+  }
+
+  /**
+   * 
+   */
+  updateUnpaidTransactionHistory(tripId, spreadSheetName){
+    spreadSheetName = spreadSheetName || 'UnpaidTransactionHistory';
+    let unpaidTransHist = new transactionHistory(spreadSheetName);
+    let transList = unpaidTransHist.getUnpaidTransactionHistory(tripId);
+    for(let i = 0; i < transList.length; i++){
+       this.spreadSheet.getSheetByName(spreadSheetName).appendRow(transList[i].getTransactionList());
+       if(i == 0) console.info(this.updatePaidTransactionHistory(transList[i].transId));
+    }
+    return 'Succefully updated the unpaid transaction history.';
+  }
+
+  /**
+   * 
+   */
+  updateTripsIDHistory(tripId, spreadSheetName){
+    spreadSheetName = spreadSheetName || 'TripsIDHistory';
+    let tripIdTrac = new idTracker('1ouUI-GCrIPcGPrjlnAvRhgS9p9fZ2BGKOamcfp87rd8');
+    this.spreadSheet.getSheetByName(spreadSheetName)
+    .appendRow(tripIdTrac.gettripsID(tripId, spreadSheetName, 'QueryData').getTripIdList());
+    console.info(this.updatePaidTriphistory(tripId));
+    console.info(this.updateUnpaidTransactionHistory(tripId));
+    return 'Successfully updated trip id history.';
+  }
+
+  /**
+   *
+   */
+  updatePaidTriphistory(tripId, spreadSheetName){
+    spreadSheetName = spreadSheetName || 'PaidTriphistory';
+    let paidTrips = new transactionHistory(spreadSheetName);
+    let ptripList = paidTrips.getTripById(tripId);
+    for(let i = 0; i < ptripList.length; i++){
+      this.spreadSheet.getSheetByName(spreadSheetName).appendRow(ptripList[i].getPaidTripList());
+    }
+    return 'Successsfully updated paid trip history.';
+  }
+
+  /**
+   * 
+   */
+  updateUnpaidTripHistory(spreadSheetName){
+    spreadSheetName = spreadSheetName || 'UnpaidTripHistory';
+    let unpaidTrip = new transactionHistory(spreadSheetName);
+    let tripList = unpaidTrip.getUnpaidPaidHistory(this.userId);
+    for(let i = 0; i < tripList.length; i++){
+      this.spreadSheet.getSheetByName(spreadSheetName).appendRow(tripList[i].getCaptureTripsList());
+      console.info(this.updateTripsIDHistory(tripList[i].tripId));
+    }
+    return 'Successfully updated the user trip history';
+  }
+
+  /**
+   * 
+   */
+  updateCapturePayment(spreadSheetName){
+    spreadSheetName = spreadSheetName || 'CapturePayment';
+    let spreadSheetData = this.spreadSheet.getSheetByName(spreadSheetName);
+    let pay = new collectionDatabase();
+    let userPay = pay.getUserPaymentList(this.userId);
+    for(let i = 0; i < userPay.length; i++){
+      spreadSheetData.appendRow(userPay[i].getCapturePaymentList());
+      console.info(this.updatePaymentId(userPay[i].paymentId));
+    }
     SpreadsheetApp.flush();
+    return 'Successfully updated the user payment.';
   }
 
   /**
    * 
    */
-  queryData(query, spName){
-    let lock = LockService.getScriptLock();
-    lock.waitLock(400000);
-    this.spreadsheetName = spName;
-    this.spreadsheet.getSheetByName(this.spreadsheetName).getRange('A1').setValue(query);
+  updatePaymentId(payId, spreadSheetName){
+    spreadSheetName = spreadSheetName || 'PaymentId';
+    let payIdTrac = new idTracker();
+    this.spreadSheet.getSheetByName(spreadSheetName)
+    .appendRow(payIdTrac.getPaymentID(payId).getPaymentList());
+    return 'Successfully updated payment id.';
+  }
+
+  /**
+   * 
+   */
+  updateMessageId(msgId, spreadSheetName){
+    spreadSheetName = spreadSheetName || 'MessageId';
+    let msgIdTrac = new idTracker();
+    this.spreadSheet.getSheetByName(spreadSheetName)
+    .appendRow(msgIdTrac.getMessageId(msgId).getMsgDetailList());
+    msgIdTrac.getMessageId(msgId).messageId.removeId();
+    return 'Successfully updated message id.'
+  }
+
+  /**
+   * 
+   */
+  updateAttendanceAlert(spreadSheetName){
+    spreadSheetName = spreadSheetName || 'AttendanceAlert';
+    let msg = new messages();
+    let userMsg = msg.getAttMsgList(this.userId, 'Read');
+    for(let i = 0; i < userMsg.length; i++){
+      this.spreadSheet.getSheetByName(spreadSheetName).appendRow(userMsg[i].getMessageList());
+      console.info(this.updateMessageId(userMsg[i].messageId));
+      userMsg[i].deleteMsg();
+    }
     SpreadsheetApp.flush();
-    lock.releaseLock();
-
-    return this.spreadsheet.getSheetByName(this.spreadsheetName).getDataRange().getValues();
+    return 'Successfully updated user alert messages.';
   }
 
-  /**
-   * 
-   */
-  getUserPaidHistory(userId, spName){
-    spName = spName || 'QueryData';
-    let data = this.queryData(
-      '=QUERY(PaidTriphistory!A:K, "select C, D, G, I, J, K Where B = \'' + userId + '\'",1)'
-      , spName);
-    let fomartData = [];
-    for(let i = 1; i < data.length; i++){
-      let status = 'Paid';
-      if(data[i][2] == 'unpaid') status = 'Not fully paid';
-      fomartData.push(
-        [generalFunctions.formatDate(data[i][1]), 'R ' + parseFloat(data[i][0]).toFixed(2), 
-        status, generalFunctions.formatDate(data[i][3]), 'R ' + parseFloat(data[i][4]).toFixed(2), 
-        'R ' + parseFloat(data[i][5]).toFixed(2)]
-      );
-    }
-    return fomartData;
-  }
-
-  /**
-   * 
-   */
-  getUnpaidPaidHistory(userId, spName){
-    spName = spName || 'QueryData';
-    let data = this.queryData(
-      '=QUERY(' + this.spreadsheetName + '!A:I, "select A, B, C, D, E, F, G, H, I Where B = \'' + userId + '\'",1)'
-      , spName);
-    let unpaidList = [];
-    for(let i = 1; i < data.length; i++){
-      unpaidList.push(
-        new captureTrips(data[i][0], data[i][1], data[i][2], generalFunctions.formatDate(data[i][3]), data[i][4],
-        data[i][5], data[i][6], data[i][7], data[i][8], this.spreadsheetId, this.spreadsheetName)
-      );
-    }
-    return unpaidList;
-  }
-
-  /**
-   * 
-   */
-  getUnpaidTransactionHistory(tripId, spName){
-    spName = spName || 'QueryData';
-    let data = this.queryData(
-      '=QUERY(' + this.spreadsheetName + '!A:H, "select A, B, C, D, E, F, G, H Where C = \'' + tripId + '\'",1)'
-      , spName);
-    let unpaidList = [];
-    for(let i = 1; i < data.length; i++){
-      unpaidList.push(
-        new accountTransaction(data[i][0], data[i][1], data[i][2], data[i][3], generalFunctions.formatDate(data[i][4]),
-        parseFloat(data[i][5]).toFixed(2), parseFloat(data[i][6]).toFixed(2), data[i][7], 
-        this.spreadsheetId, this.spreadsheetName)
-      );
-    }
-    return unpaidList;
-  }
-
-  getTripById(tripId, spName){
-    spName = spName || 'QueryData';
-    let trip = this.queryData(
-      '=QUERY(PaidTriphistory!A:K, "select A, B, C, D, E, F, G, H, I, J, K Where A = \'' + tripId + '\'",1)',
-      spName
-    );
-
-    let paidTripList = [];
-    for(let i = 1; i < trip.length; i++){
-      let status = 'Not fully paid';
-      if(trip[i][6].toLowerCase() == 'payed') status = 'Fully paid';
-      paidTripList.push(
-        new paidTriphistory(
-          trip[i][0], trip[i][1], trip[i][2], trip[i][3], trip[i][4], trip[i][5], status, trip[i][7], trip[i][8],
-          trip[i][9], trip[i][10]
-        )
-      );
-    }
-    return paidTripList;
-  }
-
-  /**
-   * 
-   */
-  getTransById(query, spName){
-    spName = spName || 'QueryData';
-    let trans = this.queryData(query, spName);
-
-    let transList = [];
-    for(let i = 1; i < trans.length; i++){
-      transList.push(
-        new paidTransactionHistory(
-          trans[i][0], trans[i][1], trans[i][2], trans[i][3], trans[i][4], trans[i][5], trans[i][6], trans[i][7],
-          trans[i][8], trans[i][9]
-        )
-      );
-    }
-    return transList;
-  }
-
-  /**
-   * 
-   */
-  getTransId(transId, spName){
-    spName = spName || 'QueryData';
-    return this.getTransById(
-        '=QUERY(TransactionIDHistory!A:E, "select A, B, C, D, E Where A = \'' + transId + '\'",1)'
-        , spName
-      );
-  }
-  /**
-   * 
-   */
-  getPaidTrans(transId, spName){
-    spName = spName || 'QueryData';
-    return this.getTransById(
-        '=QUERY(PaidTransactionHistory!A:J, "select A, B, C, D, E, F, G, H, I, J Where A = \'' + transId + '\'",1)'
-        , spName
-      );
-  }
-}
-
-/**
- * 
- */
-class paidTransactionHistory{
-  constructor(transId, accNumb, tripId, transType, transDate, transAmt, bal, 
-    payDate, payAmount, outAmount, spreadSheetId, spreadSheetName){
-    this.spreadSheetId = spreadSheetId ||'1ouUI-GCrIPcGPrjlnAvRhgS9p9fZ2BGKOamcfp87rd8';
-    this.spreadSheetName = spreadSheetName || 'PaidTransactionHistory';
-    this.spreadSheetData = SpreadsheetApp
-      .openById(this.spreadSheetId).getSheetByName(this.spreadSheetName);
-    this.spreadSheet = this.spreadSheetData = SpreadsheetApp.openById(this.spreadSheetId);
-
-    this.accTrans = new accountTransaction(transId, accNumb, tripId, transType,
-      transDate, transAmt, bal, '', this.spreadSheetId, this.spreadSheetName);
-    this.payDate = payDate;
-    this.payAmount = payAmount;
-    this.outAmount = outAmount;
-  }
-
-  /**
-   * 
-   */
-  getpaidTranList(){
-    let transList = this.accTrans.getTransactionList();
-    transList.pop();
-    transList.push(generalFunctions.formatDateTime(this.payDate));
-    transList.push(parseFloat(this.payAmount).toFixed(2));
-    transList.push(parseFloat(this.outAmount).toFixed(2));
-    return transList;
-  }
-
-}
-
-/**
- * 
- */
-class paidTriphistory{
-  constructor(tripId, userId, tripAmount, tripDate, fromLocation, toLocation, status, driverId,
-   paidDate, amountPaid, remainAmount, spreadSheetId, spreadSheetName){
-
-    this.spreadSheetId = spreadSheetId ||'1ouUI-GCrIPcGPrjlnAvRhgS9p9fZ2BGKOamcfp87rd8';
-    this.spreadSheetName = spreadSheetName || 'PaidTriphistory';
-    this.spreadSheetData = SpreadsheetApp
-      .openById(this.spreadSheetId).getSheetByName(this.spreadSheetName); 
-    this.spreadSheet = this.spreadSheetData = SpreadsheetApp.openById(this.spreadSheetId);
-
-    this.paidTripHist = new captureTrips(
-      tripId, userId, tripAmount, tripDate, fromLocation, toLocation, status, driverId, '', 
-      this.spreadSheetId, this.spreadSheetName
-    );
-    this.paidDate = paidDate;
-    this.amountPaid = amountPaid;
-    this.amountRemain = remainAmount;
-  }
-
-  /**
-   * 
-   */
-  getPaidTripList(){
-    let tripList = this.paidTripHist.getCaptureTripsList();
-    tripList.pop();
-    tripList.push(generalFunctions.formatDateTime(this.paidDate));
-    tripList.push(parseFloat(this.amountPaid).toFixed(2));
-    tripList.push(parseFloat(this.amountRemain).toFixed(2));
-    return tripList;
-  }
 }
