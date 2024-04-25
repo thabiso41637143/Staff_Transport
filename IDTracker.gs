@@ -8,7 +8,6 @@ class idTracker {
     let lock = LockService.getScriptLock();
     lock.waitLock(400000);
     spreadNames = spreadNames || 'ReadQueryData';
-    //console.info([query, spreadNames, this.spreadSheetId]);
     this.spreadSheet.getSheetByName(spreadNames)
     .getRange('A1').setValue(query);
     SpreadsheetApp.flush();
@@ -89,11 +88,12 @@ class idTracker {
     }
   }
 
-  getTransID(transId, spreadNames){
+  getTransID(transId, spreadNames, spName){
     spreadNames = spreadNames || 'AccountTransactionId';
+    spName = spName || 'ReadQueryData';
     try{
       let trans = this.queryId(
-          '=QUERY(' + spreadNames + '!A1:E, "Select A, B, C, D, E where A = \'' + transId.toUpperCase() + '\'",1)'
+          '=QUERY(' + spreadNames + '!A1:E, "Select A, B, C, D, E where A = \'' + transId.toUpperCase() + '\'",1)', spName
         )[1];
       return new transactionID(trans[0].toUpperCase(), trans[3], trans[1], trans[2], trans[4]);
     }catch(e){

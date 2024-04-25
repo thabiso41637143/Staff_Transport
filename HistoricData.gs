@@ -1,3 +1,7 @@
+
+/**
+ * 
+ */
 class historicData {
   constructor(spreadSheetId){
       this.spreadSheetId = spreadSheetId || '1XrMH9XoaiWMG3RfcdUM21wj1T8nGGWs_DsY8rcODaAQ';
@@ -22,8 +26,21 @@ class historicData {
     capPassHist.captureCapPassHist();
   }
 
-}
+  // /**
+  //  * 
+  //  */
+  // queryData(query, spName){
+  //   spName = spName || 'QueryData';
+  //   this.spreadSheet.getSheetByName(spName).getRange('A1').setValue(query);
+  //   SpreadsheetApp.flush();
+  //   return this.spreadSheet.getSheetByName(spName).getDataRange().getValues();
+  // }
 
+}
+/*
+(tripId, userId, tripAmount, tripDate, fromLocation, toLocation, status, driverId,
+   paidDate, amountPaid, remainAmount, spreadSheetId, spreadSheetName)
+*/
 /**
  * 
  */
@@ -226,6 +243,67 @@ class transactionHistory{
     }
     return unpaidList;
   }
+
+  getTripById(tripId, spName){
+    spName = spName || 'QueryData';
+    let trip = this.queryData(
+      '=QUERY(PaidTriphistory!A:K, "select A, B, C, D, E, F, G, H, I, J, K Where A = \'' + tripId + '\'",1)',
+      spName
+    );
+
+    let paidTripList = [];
+    for(let i = 1; i < trip.length; i++){
+      let status = 'Not fully paid';
+      if(trip[i][6].toLowerCase() == 'payed') status = 'Fully paid';
+      paidTripList.push(
+        new paidTriphistory(
+          trip[i][0], trip[i][1], trip[i][2], trip[i][3], trip[i][4], trip[i][5], status, trip[i][7], trip[i][8],
+          trip[i][9], trip[i][10]
+        )
+      );
+    }
+    return paidTripList;
+  }
+
+  /**
+   * 
+   */
+  getTransById(query, spName){
+    spName = spName || 'QueryData';
+    let trans = this.queryData(query, spName);
+
+    let transList = [];
+    for(let i = 1; i < trans.length; i++){
+      transList.push(
+        new paidTransactionHistory(
+          trans[i][0], trans[i][1], trans[i][2], trans[i][3], trans[i][4], trans[i][5], trans[i][6], trans[i][7],
+          trans[i][8], trans[i][9]
+        )
+      );
+    }
+    return transList;
+  }
+
+  /**
+   * 
+   */
+  getTransId(transId, spName){
+    spName = spName || 'QueryData';
+    return this.getTransById(
+        '=QUERY(TransactionIDHistory!A:E, "select A, B, C, D, E Where A = \'' + transId + '\'",1)'
+        , spName
+      );
+  }
+  /**
+   * 
+   */
+  getPaidTrans(transId, spName){
+    spName = spName || 'QueryData';
+    return this.getTransById(
+        '=QUERY(PaidTransactionHistory!A:J, "select A, B, C, D, E, F, G, H, I, J Where A = \'' + transId + '\'",1)'
+        , spName
+      );
+  }
 }
 
 /**
@@ -233,14 +311,13 @@ class transactionHistory{
  */
 class paidTransactionHistory{
   constructor(transId, accNumb, tripId, transType, transDate, transAmt, bal, 
-  payDate, payAmount, outAmount, spreadSheetId, spreadSheetName){
-    
-    
+    payDate, payAmount, outAmount, spreadSheetId, spreadSheetName){
     this.spreadSheetId = spreadSheetId ||'1ouUI-GCrIPcGPrjlnAvRhgS9p9fZ2BGKOamcfp87rd8';
     this.spreadSheetName = spreadSheetName || 'PaidTransactionHistory';
     this.spreadSheetData = SpreadsheetApp
-      .openById(this.spreadSheetId)
-      .getSheetByName(this.spreadSheetName);
+      .openById(this.spreadSheetId).getSheetByName(this.spreadSheetName);
+    this.spreadSheet = this.spreadSheetData = SpreadsheetApp.openById(this.spreadSheetId);
+
     this.accTrans = new accountTransaction(transId, accNumb, tripId, transType,
       transDate, transAmt, bal, '', this.spreadSheetId, this.spreadSheetName);
     this.payDate = payDate;
@@ -254,18 +331,12 @@ class paidTransactionHistory{
   getpaidTranList(){
     let transList = this.accTrans.getTransactionList();
     transList.pop();
-    transList.push(generalFunctions.formatDate(this.payDate));
+    transList.push(generalFunctions.formatDateTime(this.payDate));
     transList.push(parseFloat(this.payAmount).toFixed(2));
     transList.push(parseFloat(this.outAmount).toFixed(2));
     return transList;
   }
 
-  /**
-   * 
-   */
-  queryData(){
-
-  }
 }
 
 /**
@@ -278,8 +349,9 @@ class paidTriphistory{
     this.spreadSheetId = spreadSheetId ||'1ouUI-GCrIPcGPrjlnAvRhgS9p9fZ2BGKOamcfp87rd8';
     this.spreadSheetName = spreadSheetName || 'PaidTriphistory';
     this.spreadSheetData = SpreadsheetApp
-      .openById(this.spreadSheetId)
-      .getSheetByName(this.spreadSheetName); 
+      .openById(this.spreadSheetId).getSheetByName(this.spreadSheetName); 
+    this.spreadSheet = this.spreadSheetData = SpreadsheetApp.openById(this.spreadSheetId);
+
     this.paidTripHist = new captureTrips(
       tripId, userId, tripAmount, tripDate, fromLocation, toLocation, status, driverId, '', 
       this.spreadSheetId, this.spreadSheetName
@@ -295,16 +367,11 @@ class paidTriphistory{
   getPaidTripList(){
     let tripList = this.paidTripHist.getCaptureTripsList();
     tripList.pop();
-    tripList.push(generalFunctions.formatDate(this.paidDate));
+    tripList.push(generalFunctions.formatDateTime(this.paidDate));
     tripList.push(parseFloat(this.amountPaid).toFixed(2));
     tripList.push(parseFloat(this.amountRemain).toFixed(2));
     return tripList;
   }
 
-  /**
-   * 
-   */
-  queryData(){
 
-  }
 }
