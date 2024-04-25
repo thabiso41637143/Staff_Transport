@@ -25,22 +25,8 @@ class historicData {
     userType,	homeLoc,	collectionLoc,	email, status, row, dateCap);
     capPassHist.captureCapPassHist();
   }
-
-  // /**
-  //  * 
-  //  */
-  // queryData(query, spName){
-  //   spName = spName || 'QueryData';
-  //   this.spreadSheet.getSheetByName(spName).getRange('A1').setValue(query);
-  //   SpreadsheetApp.flush();
-  //   return this.spreadSheet.getSheetByName(spName).getDataRange().getValues();
-  // }
-
 }
-/*
-(tripId, userId, tripAmount, tripDate, fromLocation, toLocation, status, driverId,
-   paidDate, amountPaid, remainAmount, spreadSheetId, spreadSheetName)
-*/
+
 /**
  * 
  */
@@ -372,6 +358,4 @@ class paidTriphistory{
     tripList.push(parseFloat(this.amountRemain).toFixed(2));
     return tripList;
   }
-
-
 }
