@@ -118,6 +118,39 @@ class logTracker {
       }
     }
   }
+
+  /**
+   * 
+   */
+  queryData(query, spName){
+    spName = spName || 'QueryData';
+    this.spreadSheet.getSheetByName(spName).getRange('A1').setValue(query);
+    SpreadsheetApp.flush();
+    return this.spreadSheet.getSheetByName(spName).getDataRange().getValues();
+  }
+
+  userIsFound(userId, spName){
+    spName = spName || 'QueryData'
+    return this.queryData(
+      '=QUERY(UserFileLog!A1:D, "Select A, B, C, D where A = \'' + userId + '\'", 1)', spName
+    ).length > 1;   
+  }
+
+  getuserFileLog(userId, spName){
+    spName = spName || 'QueryData'
+    let userData = this.queryData(
+      '=QUERY(UserFileLog!A1:D, "Select A, B, C, D where A = \'' + userId + '\'", 1)', spName
+    );
+    if(userData.length > 1){
+      userData = userData[1];
+      return new userFileLog(userData[0], userData[1], userData[2], userData[3]);
+    }
+    return 1;
+  }
+
+  addUserFileLog(userId){
+
+  }
 }
 
 /**
