@@ -27,18 +27,15 @@ class messages{
   }
 
   /**
-   * 
+   * Updated the getAttSendToMsg to improve efficiency.
    */
-  getAttSendToMsg(userId, status){
-    status = status || 'Read';
-    let msgList = Object.values(this.getAllAttMsg());
+  getAttSendToMsg_1(userId, status){
+    status = status || 'Unread';
+    let msgList = this.getAttMsgList(userId, status);
     let userMsg = new Map();
     for(let i = 0; i < msgList.length; i++){
-      if(userId.toString().toUpperCase() == msgList[i].sendTo.toString().toUpperCase()
-      && msgList[i].status == 'Unread'){
-        userMsg[msgList[i].messageId] = msgList[i].getMessageMap()['Message'];
-        msgList[i].updateStatus(status);
-      }
+      userMsg[msgList[i].messageId] = msgList[i].getMessageMap()['Message'];
+        msgList[i].updateStatus('Read');
     }
     return userMsg;
   }

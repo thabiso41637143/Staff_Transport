@@ -15,7 +15,6 @@ class mainMobileApp{
       console.log(details);
       let log = new transportDatabaseSheet();
       return log.getUsersMap()[details['userid'].toUpperCase()].login(details['userid'].toUpperCase(), details['type']);
-
     }
     else if(option.toLowerCase() == 'userdetails'){
       return this.getUserDetails(details);
@@ -54,7 +53,7 @@ class mainMobileApp{
     }
     else if(option.toLowerCase() == 'alert'){
       let msg = new messages();
-      return JSON.stringify(msg.getAttSendToMsg(details['userid']));
+      return JSON.stringify(msg.getAttSendToMsg_1(details['userid']));
     }
     else if(option.toLowerCase() == 'lastseen'){
       return generalFunctions.formatDateTime();
@@ -184,7 +183,7 @@ class mainMobileApp{
         data['homelocation'], data['collectionlocation'], data['email'], data['userid']);
       resp += '\n' + transData.addNewAccount(userId[1].accId.generatedId, userId[0].userId.generatedId);
       if(data['userid'] != 207){
-          console.log(transData.addNewUserSummary(userId[0].userId.generatedId));
+        console.log(transData.addNewUserSummary(userId[0].userId.generatedId));
       }
       console.log(userId[0].userId.updateStatus('Used'));
       console.log(userId[1].accId.updateStatus('Used'));
@@ -247,15 +246,12 @@ class mainMobileApp{
   getUserDetails(data){
     try{
       let usd = new transportDatabaseSheet();
-      let sumData = usd.getUserSummaryMap()[data['userid']];
+      let sumData = usd.getUserSummary(data['userid']);
       let useAcc = usd.getAccout(data['userid']);
       let userData = new Map();
-      userData['fullname'] = usd.getUsersMap()[data['userid']].userFullNames;
-      userData['account number'] = useAcc.accountNumb; //Must be removed
+      userData['fullname'] = usd.getUser(data['userid']).userFullNames;
       userData['account balance'] = useAcc.accBalance;
       userData['unpaid days'] = sumData.totNumbUpaidDays;
-      userData['paid days'] = sumData.totNumbPaidDays; // Must be removed
-      userData['number days'] = sumData.totNumbDays; //must be removed
       userData['outstanding balance'] = sumData.outAmount;
       return userData;
     }catch(e){
