@@ -37,7 +37,7 @@ class logTracker {
     menue = menue || 'addnewtrip';
     let data = this.spreadSheet.getSheetByName(spName).getDataRange().getValues();
     for(let i = 1; i < data.length; i++){
-        if(data[i][8].toString().toLowerCase() == 'waiting'){    
+      if(data[i][8].toString().toLowerCase() == 'waiting'){    
         let trip = new tripsAttentLog(data[i][1], data[i][2], data[i][3], data[i][4],
                         data[i][5], data[i][6], data[i][7], data[i][8], data[i][0]);
         trip.updateSpreadSheetCell(i + 1, 9, 'Inprogress', 'Successfull updated the cell')
@@ -443,4 +443,44 @@ class loginStatus{
       .getSheetByName(this.spreadSheetName);
     this.spreadSheet = SpreadsheetApp.openById(this.spreadSheetId);
   }
+}
+
+/**
+ * 
+ */
+class userFileLog{
+  constructor(userID,	folderCreated,	createdFiles,	mainUpdate, spreadSheetName, spreadSheetId){
+    this.userId = userID;
+    this.creatFolder = folderCreated;
+    this.fileCreat = createdFiles;
+    this.mainUpdate = mainUpdate;
+    this.spreadSheetName = spreadSheetName || 'UserFileLog';
+    this.spreadSheetId = spreadSheetId || '1y4nNhIe8omKyTMjaB7XrPcL0CqKGMXr2x9W7Y8FLZEU';
+    this.spreadSheetData = SpreadsheetApp.openById(this.spreadSheetId)
+      .getSheetByName(this.spreadSheetName);
+    this.spreadSheet = SpreadsheetApp.openById(this.spreadSheetId);
+  }
+
+  queryData(query, spName){
+    spName = spName || 'QueryData';
+    this.spreadSheet.getSheetByName(spName).getRange('A1').setValue(query);
+    SpreadsheetApp.flush();
+    return this.spreadSheet.getSheetByName(spName).getDataRange().getValues();
+  }
+
+  getRowNumber(col){
+    col = col || 0;
+    let data = this.spreadSheetData.getDataRange().getValues();
+    for(let i = 0; i < data.length; i++){
+      if(data[i][col] == this.userId) return i;
+    }
+    return -1;
+  }
+
+  updateSheet(msg, data, col, row){
+    row = row || this.getRowNumber() + 1;
+    this.spreadSheetData.getRange(row, col).setValue(data);
+    return msg;
+  }
+
 }
