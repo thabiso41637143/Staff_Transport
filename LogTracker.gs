@@ -132,18 +132,18 @@ class logTracker {
   userIsFound(userId, spName){
     spName = spName || 'QueryData'
     return this.queryData(
-      '=QUERY(UserFileLog!A1:D, "Select A, B, C, D where A = \'' + userId + '\'", 1)', spName
+      '=QUERY(UserFileLog!A1:E, "Select A, B, C, D, E where A = \'' + userId + '\'", 1)', spName
     ).length > 1;   
   }
 
   getuserFileLog(userId, spName){
     spName = spName || 'QueryData'
     let userData = this.queryData(
-      '=QUERY(UserFileLog!A1:D, "Select A, B, C, D where A = \'' + userId + '\'", 1)', spName
+      '=QUERY(UserFileLog!A1:E, "Select A, B, C, D, E where A = \'' + userId + '\'", 1)', spName
     );
     if(userData.length > 1){
       userData = userData[1];
-      return new userFileLog(userData[0], userData[1], userData[2], userData[3]);
+      return new userFileLog(userData[0], userData[1], userData[2], userData[3], userData[4]);
     }
     return 1;
   }
@@ -483,11 +483,12 @@ class loginStatus{
  * 
  */
 class userFileLog{
-  constructor(userID,	folderCreated,	createdFiles,	mainUpdate, spreadSheetName, spreadSheetId){
+  constructor(userID,	folderCreated,	createdFiles,	mainUpdate, addDate, spreadSheetName, spreadSheetId){
     this.userId = userID;
     this.creatFolder = folderCreated;
     this.fileCreat = createdFiles;
     this.mainUpdate = mainUpdate;
+    this.addedDate = addDate;
     this.spreadSheetName = spreadSheetName || 'UserFileLog';
     this.spreadSheetId = spreadSheetId || '1y4nNhIe8omKyTMjaB7XrPcL0CqKGMXr2x9W7Y8FLZEU';
     this.spreadSheetData = SpreadsheetApp.openById(this.spreadSheetId)
