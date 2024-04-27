@@ -60,6 +60,7 @@ class logTracker {
     this.spreadSheet.getSheetByName(spName).deleteRow(
       this.getRowNumber(id, spName, 0)
     );
+    return "Successfully removed the id from " + spName;
   }
 
   spreadSheetUpdateLog(userId, spName){
