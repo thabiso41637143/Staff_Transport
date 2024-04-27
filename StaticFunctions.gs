@@ -21,4 +21,16 @@ class generalFunctions{
     return templateFile;
   }
   
+  /**
+   * Getting all user Ids from the database tracker
+   */
+  static getUserId(){
+    let userList = new transportDatabaseSheet();
+    let us = userList.getUsersList();
+    let userIdList = [];
+    for(let i = 0; i < us.length; i++){
+      userIdList.push(us[i].userId);
+    }
+    return userIdList;
+  }
 }

@@ -149,7 +149,8 @@ class logTracker {
   }
 
   addUserFileLog(userId){
-
+    let user = new userFileLog(userId);
+    user.createNewUserLog();
   }
 }
 
@@ -510,10 +511,59 @@ class userFileLog{
     return -1;
   }
 
+  createNewUserLog(){
+    this.spreadSheetData.appendRow([this.userId]);
+  }
+
   updateSheet(msg, data, col, row){
     row = row || this.getRowNumber() + 1;
     this.spreadSheetData.getRange(row, col).setValue(data);
     return msg;
   }
 
+  addCheckBox(col, row, status){
+    this.spreadSheetData.getRange(row, col).insertCheckboxes();
+    if(status)
+      this.spreadSheetData.getRange(row, col).check();
+    else
+      this.spreadSheetData.getRange(row, col).uncheck();
+  }
+
+  createCheckBoxes(col, rowSize){
+    col = col || 5;
+    rowSize = rowSize || this.spreadSheetData.getDataRange().getValues().length;
+    for(let i = 1; i < rowSize; i++)
+      this.addCheckBox(col, (i + 1), false);
+    return 'Updated the checkboxes.';
+  }
+
+  updateFiles(status, col){
+    status = status || true;
+    col = col || 3;
+    this.addCheckBox(col, this.getRowNumber() + 1, status);
+    return 'Successfully updated the created file status to ' + status;
+  }
+
+  updateFolder(status, col){
+    status = status || true;
+    col = col || 2;
+    this.addCheckBox(col, this.getRowNumber() + 1, status);
+    return 'Successfully updated the created folder status to ' + status;
+  }
+
+  updateMain(status, col){
+    status = status || true;
+    col = col || 4;
+    this.addCheckBox(col, this.getRowNumber() + 1, status);
+    return 'Successfully updated the main update status to ' + status;
+  }
+
+  addCol(colHeading){
+    colHeading = colHeading || generalFunctions.formatDate();
+    this.spreadSheetData.getRange(1, 5).setValue(colHeading);
+    this.createCheckBoxes();
+    SpreadsheetApp.flush();
+
+    return 'Added a new column with the following heading '+ colHeading;
+  }
 }
