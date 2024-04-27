@@ -559,6 +559,13 @@ class userFileLog{
     return 'Successfully updated the main update status to ' + status;
   }
 
+  updateAddedDate(status, col){
+    status = status || true;
+    col = col || 5;
+    this.addCheckBox(col, this.getRowNumber() + 1, status);
+    return 'Successfully updated the addedDate update status to ' + status;
+  }
+
   addCol(colHeading){
     colHeading = colHeading || generalFunctions.formatDate();
     this.spreadSheetData.getRange(1, 5).setValue(colHeading);
