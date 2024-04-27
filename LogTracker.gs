@@ -48,7 +48,33 @@ class logTracker {
       }
     }
   }
+  getRowNumber(id, spName, col){
+    col = col || 0;
+    let data = this.spreadSheet.getSheetByName(spName).getDataRange().getValues();
+    for(let i = 0; i < data.length; i++)
+      if(id == data[i][col]) return i;
+    return -1;
+  }
 
+  removeRow(id, spName){
+    this.spreadSheet.getSheetByName(spName).deleteRow(
+      this.getRowNumber(id, spName, 0)
+    );
+  }
+
+  spreadSheetUpdateLog(userId, spName){
+    spName = spName || 'SpreadSheetUpdateLog';
+    this.spreadSheet.getSheetByName(spName).appendRow([userId]);
+    return 'Added and id with the following details ' + userId + ' to sheet ' + spName;
+  }
+
+  documentUpdateLog(spName){
+    spName = spName || 'DocumentUpdateLog';
+    let userIdList = generalFunctions.getUserId();
+    for(let i = 0; i < userIdList.length; i++)
+      this.spreadSheet.getSheetByName(spName).appendRow([userIdList[i]]);
+    return 'Updated the ' + spName + ' with new Ids.';
+  }
   updatePaymentLog(menue, spName) {
     spName = spName || 'PaymentLog';
     menue = menue || 'addnewpayment';
