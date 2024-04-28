@@ -33,4 +33,28 @@ class generalFunctions{
     }
     return userIdList;
   }
+
+  /**
+   * Create user files logs.
+   */
+  static createUserFileLog(){
+    let userIdList = generalFunctions.getUserId();
+
+    //Create folder and files of all usesers
+    for(let i = 0; i < userIdList.length; i++){
+      let userFiles = new logTracker();
+      if(!userFiles.userIsFound(userIdList[i])){
+        userFiles.addUserFileLog(userIdList[i]);
+        let userFolder = new createUserStructure(userIdList[i], 
+        '1P8b-HMhCuD0g-K9u868zK6Yf4QER4u3r');
+        console.info(userFolder.createAllUserFiles());
+        let userFileLog = userFiles.getuserFileLog(userIdList[i]);
+        if(userFileLog != 1){
+          userFileLog.updateFiles();
+          userFileLog.updateFolder();
+        }
+      }
+    }
+    return 'Created a new user for back up.'
+  }
 }
