@@ -74,6 +74,8 @@ class logTracker {
     let userIdList = generalFunctions.getUserId();
     for(let i = 0; i < userIdList.length; i++)
       this.spreadSheet.getSheetByName(spName).appendRow([userIdList[i]]);
+    let usLog = new userFileLog();
+    usLog.addCol();
     return 'Updated the ' + spName + ' with new Ids.';
   }
   updatePaymentLog(menue, spName) {
