@@ -134,3 +134,10 @@ function updateMainLog(){
     }
   }
 }
+
+function updateMsgNotification(){
+  let driveList =['TB501', 'TS502'];
+  let msg = new messages();
+  for(let i = 0; i < driveList.length; i++)
+    console.info(msg.getAttSendToMsg_1(driveList[i]));
+}
