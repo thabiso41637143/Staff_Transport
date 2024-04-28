@@ -16,6 +16,7 @@ function dataReader(option, details) {
       )
     );
   }
+
   else if(option.toLowerCase() == 'triphistory'){
     return reader.mainMenueReader(option, JSON.parse(JSON.stringify({
             'userid': details.parameter.userid
@@ -23,9 +24,11 @@ function dataReader(option, details) {
         )
       );
   }
+
   else if(option.toLowerCase() == 'accounthistory'){
 
   }
+
   else if(option.toLowerCase() == 'userprofile'){
     return reader.mainMenueReader(
         option,
@@ -34,6 +37,7 @@ function dataReader(option, details) {
         }))
     );
   }
+
   else if(option.toLowerCase() == 'alluserprofile'){
     return reader.mainMenueReader(
         option,
@@ -42,6 +46,7 @@ function dataReader(option, details) {
         }))
     );
   }
+
   else if (option.toLowerCase() == 'allgroup'){
     return reader.mainMenueReader(
         option,
@@ -50,6 +55,7 @@ function dataReader(option, details) {
         }))
     );
   }
+
   else if(option.toLowerCase() == 'alert'){
     return reader.mainMenueReader(
         option,
@@ -58,6 +64,7 @@ function dataReader(option, details) {
         }))
     );
   }
+
   else if(option.toLowerCase() == 'lastseen'){
     return reader.mainMenueReader(
         option,
@@ -66,6 +73,7 @@ function dataReader(option, details) {
         }))
     );
   }
+  
   else if(option.toLowerCase() == 'driversummary'){
     return reader.mainMenueReader(
         option,
@@ -129,9 +137,7 @@ function dataWriter(option, details){
     } catch(e){
       console.error(e);
       return 'An error occured while trying to capture the new passenger data. Please report this problem to the admin.';
-
     }
-
   }
   else if(option.toLowerCase() == 'addnewpayment'){
     /**
@@ -180,7 +186,6 @@ function dataWriter(option, details){
       return 'You do not have access to update the details of the user. Please speak to your admin for assistance to gain access';
     } catch(e){
       console.error(e);
-      //return 'An error occured while trying to details of the user data. Please report this problem to the admin.';
       return e;
     }
   }
@@ -189,12 +194,10 @@ function dataWriter(option, details){
      * Requirements:
      * - 
      */
-
   }
   else{
     return 'Unknown selection.';    
   }
-
 }
 
 /**
