@@ -106,14 +106,6 @@ class updateUserTemplates{
     console.info(this.allUserHist.updateCapturePayment());
 
     console.info(this.allUserHist.updateUnpaidTripHistory());
-
-    //console.info(this.allUserHist.updateUnpaidTransactionHistory());
-
-    //console.info(this.allUserHist.updatePaidTriphistory());
-
-    //console.info(this.allUserHist.updatePaidTransactionHistory());
-    console.info(this.allUserHist.getUrl());
-    
   }
 }
 
