@@ -93,6 +93,7 @@ function updateDocumentUpdateLog(){
 
 /**
  * Update user Documents
+ * Execute autometically after an hour using triggers
  */
 function updateUserDoc(){
   let userid = []
@@ -111,11 +112,19 @@ function updateUserDoc(){
       console.info(userFiles.spreadSheetUpdateLog(userid[i]));
       return userFiles.removeRow(userid[i], 'DocumentUpdateLog');
     }
+    else if(!userFileLog.addDate || !userFileLog.addDate == ''){
+      let userDocs = new updateUserTemplates(userid[i]);
+      userDocs.updateUserTripHistory();
+      userDocs.updateUserMsgReport();
+      console.info(userFiles.spreadSheetUpdateLog(userid[i]));
+      return userFiles.removeRow(userid[i], 'DocumentUpdateLog');
+    }
   }
 }
 
 /**
  * create main update.
+ * Execute autometically after an hour using triggers
  */
 function updateMainLog(){
   let userid = []
@@ -131,6 +140,12 @@ function updateMainLog(){
       let userSheet = new updateUserTemplates(userid[i]);
       userSheet.updateUserHistory();
       console.info(userFileLog.updateMain());
+      return userFiles.removeRow(userid[i], 'SpreadSheetUpdateLog');
+    }
+    else if(!userFileLog.addDate || !userFileLog.addDate == ''){
+      let userSheet = new updateUserTemplates(userid[i]);
+      userSheet.updateUserHistory();
+      console.info(userFileLog.updateAddedDate());
       return userFiles.removeRow(userid[i], 'SpreadSheetUpdateLog');
     }
   }
