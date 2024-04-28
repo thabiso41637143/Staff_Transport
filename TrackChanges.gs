@@ -83,7 +83,8 @@ function createUserFileLog(){
 }
 
 /**
- * 
+ * Populate the log tracker with all ids and a date to update them
+ * Execute once a day using trigger.
  */
 function updateDocumentUpdateLog(){
   let userUpdate = new logTracker();
@@ -135,6 +136,10 @@ function updateMainLog(){
   }
 }
 
+/**
+ * To set status to Read for the drivers.
+ * Executed once a day using auto triggers.
+ */
 function updateMsgNotification(){
   let driveList =['TB501', 'TS502'];
   let msg = new messages();
