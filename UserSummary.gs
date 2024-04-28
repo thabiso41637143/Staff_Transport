@@ -218,14 +218,33 @@ class userFolders{
     this.userId = userId;
     this.folderId = folderId;
     this.folderName = folderName;
-    this.docId = docId || '';
+    this.docId = docId;
     this.docName = docName;
-    this.comments = comm;
+    this.comments = comm || '';
 
     this.spreadSheetId = spreadSheetId ||'1Xsh3_Z_BvmSJw11CN_8PAXf1x-QPflEHTlN7jX2WXTA';
     this.spreadSheetName = spreadSheetName || 'UserFolders';
     this.spreadSheetData = SpreadsheetApp
       .openById(this.spreadSheetId)
       .getSheetByName(this.spreadSheetName); 
+  }
+
+  getRowNumber(colNumber){
+    colNumber = colNumber || 0;
+    let data = this.spreadSheetData.getDataRange().getValues();
+    for(let i = 0; i < data.length; i++){
+      if(data[i][colNumber].toString().toUpperCase() == this.userId){
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  getUserFolderList(){
+    return [this.userId, this.folderId, this.folderName,
+    this.docId, this.docName, this.comments];
+  }
+  getFolder(){
+    
   }
 }

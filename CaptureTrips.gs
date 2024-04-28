@@ -1,3 +1,7 @@
+
+/**
+ * 
+ */
 class captureTrips {
   constructor(tripId, userId, tripAmount, tripDate, fromLocation, toLocation, status, driverId,comm,
    spreadSheetId, spreadSheetName){
@@ -37,7 +41,7 @@ class captureTrips {
     this.getCaptureTripMap() + "\nRow Number: "+ rowNumb;
   }
   getCaptureTripsList(){
-    return [this.tripId, this.userId, parseFloat(this.amount).toFixed(2), Utilities.formatDate(this.date, 'GMT+0200', 'd MMMM yyyy'),
+    return [this.tripId, this.userId, parseFloat(this.amount).toFixed(2), generalFunctions.formatDate(this.date),
      this.fromLocation, this.toLocation, this.status, this.driveId, this.comments];
   }
 

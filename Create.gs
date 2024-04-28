@@ -29,7 +29,6 @@ class createUserStructure{
     console.info(this.createUserFolder());
     let files = Object.keys(this.allFiles);
     for(let i = 0; i < files.length; i++){
-      //console.info(this.allFiles[files[i]]);
       this.newFileName = this.userId + ' '+this.allFiles[files[i]]['name'];
       let file = new createFiles(this.allFiles[files[i]]['Id'], this.newUserFolder.getFolder(), this.newFileName, 
       this.allFiles[files[i]]['type']);
@@ -79,7 +78,7 @@ class folderStructure {
   checkFolder(){
     let datCol = new collectionDatabase();
     return datCol.checkTransQuerySet(
-      '=QUERY(FolderStructures!A:H,"Select A, B, C, D, E Where LOWER(B) contains \'' + 
+      '=QUERY(FolderStructures!A:H,"Select A, B, C, D, E Where LOWER(B) = \'' + 
       this.folderName.toLowerCase() + '\' and C = \'' + this.mainFolderId + '\'",1)',  'QuerySet'
     );
   }

@@ -1,4 +1,6 @@
-
+/**
+ * 
+ */
 class userDetails{
   constructor(userId, fullNames, contacts, userType, homeLocation, collectionLocation, email, groupId, comments, spreadSheetId, spreadSheetName){
     this.userId = userId;
