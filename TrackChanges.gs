@@ -82,9 +82,36 @@ function createUserFileLog(){
   }
 }
 
+function updateDocumentUpdateLog(){
+  let userUpdate = new logTracker();
+  userUpdate.documentUpdateLog();
+}
 /**
  * Update user Documents
  */
 function updateUserDoc(){
+  let userid = []
+  let data = SpreadsheetApp.openById('1y4nNhIe8omKyTMjaB7XrPcL0CqKGMXr2x9W7Y8FLZEU')
+    .getSheetByName('DocumentUpdateLog').getDataRange().getValues();
+  for(let k = 1; k < data.length; k++)
+    userid.push(data[k][0]);
+  
+  for(let i = 0; i < userid.length; i++){
+    let userFiles = new logTracker();
+    let userFileLog = userFiles.getuserFileLog(userid[i]);
+    if(!userFileLog.mainUpdate){
+      let userDocs = new updateUserTemplates(userid[i]);
+      userDocs.updateUserTripHistory();
+      userDocs.updateUserMsgReport();
+      console.info(userFiles.spreadSheetUpdateLog(userid[i]));
+      return userFiles.removeRow(userid[i], 'DocumentUpdateLog');
+    }
+  }
+}
+
+/**
+ * create main update.
+ */
+function updateMainLog(){
 
 }

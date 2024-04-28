@@ -4,7 +4,6 @@
  */
 class updateUserTemplates{
   constructor(userId, spreadSheetName, spreadSheetId){
-
     this.userId = userId;
     this.payTripHist;
     this.msgDoc;
@@ -24,7 +23,7 @@ class updateUserTemplates{
    */
   getFile(filePurpose){
     return this.queryFiles(
-      '=QUERY(UserFiles!A:H,"Select A, B, C, D, E, F, G, H Where A = \'' + this.userId + '\' and LOWER(G) contains \'' + filePurpose.toLowerCase() + '\'",1)'
+      '=QUERY(UserFiles!A:H,"Select A, B, C, D, E, F, G, H Where A = \'' + this.userId + '\' and LOWER(G) = \'' + filePurpose.toLowerCase() + '\'",1)'
     )[1];
   }
 
@@ -42,6 +41,13 @@ class updateUserTemplates{
     this.allUserHist = new allUserData(this.userId, userData[3], userData[1]);
   }
 
+  getAllFileUrls(){
+    let urlMap = new Map();
+    urlMap['tripHistory'] = this.payTripHist.getDocUrl();
+    urlMap['messageReport'] = this.msgDoc.getDocUrl();
+    urlMap['userHistory'] = this.allUserHist.getUrl();
+    return urlMap;
+  }
   /**
    * 
    */
