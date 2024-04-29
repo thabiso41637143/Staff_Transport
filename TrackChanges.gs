@@ -70,7 +70,7 @@ function updateDocumentUpdateLog(){
 
 /**
  * Update user Documents
- * Execute autometically after an hour using triggers
+ * Execute autometically after 10 minutes using triggers
  */
 function updateUserDoc(){
   let userid = []
@@ -101,7 +101,7 @@ function updateUserDoc(){
 
 /**
  * create main update.
- * Execute autometically after an hour using triggers
+ * Execute autometically after 10 minutes using triggers
  */
 function updateMainLog(){
   let userid = []
@@ -114,12 +114,14 @@ function updateMainLog(){
     let userFiles = new logTracker();
     let userFileLog = userFiles.getuserFileLog(userid[i]);
     if(!userFileLog.mainUpdate){
+      console.log('Updating main for user '+ userid[i]);
       let userSheet = new updateUserTemplates(userid[i]);
       userSheet.updateUserHistory();
       console.info(userFileLog.updateMain());
       return userFiles.removeRow(userid[i], 'SpreadSheetUpdateLog');
     }
     else if(!userFileLog.addDate || !userFileLog.addDate == ''){
+      console.log('Updating newdate section for user: ' + userid[i]);
       let userSheet = new updateUserTemplates(userid[i]);
       userSheet.updateUserHistory();
       console.info(userFileLog.updateAddedDate());
