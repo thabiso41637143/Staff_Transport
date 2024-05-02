@@ -102,9 +102,7 @@ class updateUserTemplates{
    */
   updateUserHistory(){
     console.info(this.allUserHist.updateAttendanceAlert());
-
     console.info(this.allUserHist.updateCapturePayment());
-
     console.info(this.allUserHist.updateUnpaidTripHistory());
   }
 }
@@ -219,18 +217,23 @@ class allUserData{
    */
   updateTransactionIDHistory(transId, spreadSheetName){
     spreadSheetName = spreadSheetName || 'TransactionIDHistory';
-    let tId = new idTracker(
-        '1ouUI-GCrIPcGPrjlnAvRhgS9p9fZ2BGKOamcfp87rd8'
-      );
-    let id = tId.getTransID(transId, spreadSheetName, 'QueryData');
-    if(id != 1){
-      id.tranId.updateStatus('Closed');
-      this.spreadSheet.getSheetByName(spreadSheetName)
-        .appendRow(id.getTransactionList());
-      id.tranId.removeId();
-      return 'Successfully updated transaction Id history.';
+    try{
+      let tId = new idTracker(
+          '1ouUI-GCrIPcGPrjlnAvRhgS9p9fZ2BGKOamcfp87rd8'
+        );
+      let id = tId.getTransID(transId, spreadSheetName, 'QueryData');
+      if(id != 1){
+        id.tranId.updateStatus('Closed');
+        this.spreadSheet.getSheetByName(spreadSheetName)
+          .appendRow(id.getTransactionList());
+        id.tranId.removeId();
+        return 'Successfully updated transaction Id history.';
+      }
+      return 'Id object was not found.';
+    }catch(e){
+      console.error(e);
+      return "An error occured while updating TransactionIDHistory with the following details: " + e;
     }
-    return 'Id object was not found.';
   }
 
   /**
@@ -238,15 +241,20 @@ class allUserData{
    */
   updatePaidTransactionHistory(transId, spreadSheetName){
     spreadSheetName = spreadSheetName || 'PaidTransactionHistory';
-    let transHist = new transactionHistory(spreadSheetName);
-    let transHistList = transHist.getPaidTrans(transId);
-    for(let i = 0; i < transHistList.length; i++){
-      this.spreadSheet.getSheetByName(spreadSheetName)
-      .appendRow(transHistList[i].getpaidTranList());
-      transHistList[i].accTrans.removeTransact();
+    try{
+      let transHist = new transactionHistory(spreadSheetName);
+      let transHistList = transHist.getPaidTrans(transId);
+      for(let i = 0; i < transHistList.length; i++){
+        this.spreadSheet.getSheetByName(spreadSheetName)
+        .appendRow(transHistList[i].getpaidTranList());
+        transHistList[i].accTrans.removeTransact();
+      }
+      console.info(this.updateTransactionIDHistory(transId));
+      return 'Successfully update paid transaction history.';
+    }catch(e){
+      console.error(e);
+      return 'An error occured while trying to update PaidTransactionHistory: ' + e;
     }
-    console.info(this.updateTransactionIDHistory(transId));
-    return 'Successfully update paid transaction history.';
 
   }
 
@@ -335,12 +343,17 @@ class allUserData{
    */
   updatePaymentId(payId, spreadSheetName){
     spreadSheetName = spreadSheetName || 'PaymentId';
-    let payIdTrac = new idTracker();
-    payIdTrac.getPaymentID(payId).paymentId.updateStatus('Closed');
-    this.spreadSheet.getSheetByName(spreadSheetName)
-    .appendRow(payIdTrac.getPaymentID(payId).getPaymentList());
-    console.info(payIdTrac.getPaymentID(payId).paymentId.removeId());
-    return 'Successfully updated payment id.';
+    try{
+      let payIdTrac = new idTracker();
+      payIdTrac.getPaymentID(payId).paymentId.updateStatus('Closed');
+      this.spreadSheet.getSheetByName(spreadSheetName)
+      .appendRow(payIdTrac.getPaymentID(payId).getPaymentList());
+      console.info(payIdTrac.getPaymentID(payId).paymentId.removeId());
+      return 'Successfully updated payment id.';
+    }catch(e){
+      console.error(e);
+      return 'Failed to update payment with ID: ' + msgId;
+    }
   }
 
   /**
@@ -348,12 +361,17 @@ class allUserData{
    */
   updateMessageId(msgId, spreadSheetName){
     spreadSheetName = spreadSheetName || 'MessageId';
-    let msgIdTrac = new idTracker();
-    msgIdTrac.getMessageId(msgId).messageId.updateStatus('Closed');
-    this.spreadSheet.getSheetByName(spreadSheetName)
-    .appendRow(msgIdTrac.getMessageId(msgId).getMsgDetailList());
-    console.info(msgIdTrac.getMessageId(msgId).messageId.removeId());
-    return 'Successfully updated message id.'
+    try{
+      let msgIdTrac = new idTracker();
+      msgIdTrac.getMessageId(msgId).messageId.updateStatus('Closed');
+      this.spreadSheet.getSheetByName(spreadSheetName)
+      .appendRow(msgIdTrac.getMessageId(msgId).getMsgDetailList());
+      console.info(msgIdTrac.getMessageId(msgId).messageId.removeId());
+      return 'Successfully updated message id.'
+    }catch(e){
+      console.error(e);
+      return 'Failed to update message with ID: ' + msgId;
+    }
   }
 
   /**
@@ -371,5 +389,4 @@ class allUserData{
     SpreadsheetApp.flush();
     return 'Successfully updated user alert messages.';
   }
-
 }

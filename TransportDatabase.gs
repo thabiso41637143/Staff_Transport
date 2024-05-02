@@ -1,7 +1,7 @@
+
 /**
  * 
  */
-
 class transportDatabaseSheet {
   constructor(spreadSheetId){
     this.spreadSheetId = spreadSheetId || '1Xsh3_Z_BvmSJw11CN_8PAXf1x-QPflEHTlN7jX2WXTA';
@@ -161,7 +161,6 @@ class transportDatabaseSheet {
     console.log("Failed to add a new row to the database with the following details\n"+
        [accNumb, userId.toUpperCase(), 0.00]);
       return 'Failed to add a new account details';
-
   }
 
   addNewUser(userId, fullNames, contacts, userType, homeLocation, collectionLocation, email, groupId, spreadSheetName){

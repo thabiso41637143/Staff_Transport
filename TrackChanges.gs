@@ -44,6 +44,7 @@ function updatePaidTrips(){
 
 /**
  * This function I run it manual to create a drive in the system
+ * Run this function manually.
  */
 function updateNewDriver(){
   let driver = new capturePassenger('Admin', 207, 'Tshegofatso Mampana', '(079) 379 4079', 'Driver', '', '', 'tshego.seregobona@gmail.com');
@@ -52,6 +53,7 @@ function updateNewDriver(){
 
 /**
  * create main folder.
+ * Run manually when creating main folder.
  */
 function createMainFolder(){
   let mainFolder = new folderStructure(
@@ -138,7 +140,7 @@ function updateMainLog(){
  * Executed once a day using auto triggers.
  */
 function updateMsgNotification(){
-  let driveList =['TB501', 'TS502'];
+  let driveList =['TB501', 'TS502', 'SP1001', 'FF1015', 'FF1012', 'FF1009', 'FF1011', 'FF1013', 'FB1002', 'FF1007', 'FF1014'];
   let msg = new messages();
   for(let i = 0; i < driveList.length; i++)
     console.info(msg.getAttSendToMsg_1(driveList[i]));

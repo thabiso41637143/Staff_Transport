@@ -1,3 +1,7 @@
+
+/**
+ * 
+ */
 class generalFunctions{
 
   static formatDate(d){
@@ -62,7 +66,6 @@ class generalFunctions{
     date = date || new Date();
     date = new Date(date);
     
-    console.log(date);
     // get the weekday number from the current date
     let dayOfWeek = date.getDay(); 
     let day = '';
@@ -89,6 +92,5 @@ class generalFunctions{
         day = "Saturday";
     }
     return day;
-    
   }
 }
