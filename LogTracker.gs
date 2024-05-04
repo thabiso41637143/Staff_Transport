@@ -498,13 +498,44 @@ class capturePassenger{
  * 
  */
 class loginStatus{
-  constructor(spreadSheetName, spreadSheetId){
+  constructor(userId, userType, logStatus, lastSeen, menue, spreadSheetName, spreadSheetId){
+
+    this.userId = userId;
+    this.userType = userType;
+    this.logStatus = logStatus;
+    this.lastSeen = lastSeen;
+    this.userMenue = menue || JSON.parse(JSON.stringify({'login': 5, 'userdetails': 6, 'triphistory': 7,
+    'accounthistory': 8, 'userprofile': 9, 'alluserprofile': 10, 'allgroup': 11, 'alert': 12, 'driversummary': 13, 
+    'addnewtrip': 14, 'addnewuser': 15, 'capturereports': 16, 'updateuser': 17, 'updatetrip': 18}));
 
     this.spreadSheetName = spreadSheetName || 'LoginStatus';
     this.spreadSheetId = spreadSheetId || '1y4nNhIe8omKyTMjaB7XrPcL0CqKGMXr2x9W7Y8FLZEU';
     this.spreadSheetData = SpreadsheetApp.openById(this.spreadSheetId)
       .getSheetByName(this.spreadSheetName);
     this.spreadSheet = SpreadsheetApp.openById(this.spreadSheetId);
+  }
+
+  queryData(query, spName){
+    spName = spName || 'QueryData';
+    this.spreadSheet.getSheetByName(spName).getRange('A1').setValue(query);
+    SpreadsheetApp.flush();
+    this.spreadSheet.getSheetByName(spName).getDataRange().getValues();
+  }
+
+  updateSpreadSheet(data, msg, col, row){
+
+  }
+
+  updateMenue(menueItem, data, rowNumb){
+
+  }
+
+  updateLastSeen(data, rowNumb){
+
+  }
+
+  updateLoginStatus(data, rowNumb){
+
   }
 }
 
