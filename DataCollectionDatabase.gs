@@ -380,7 +380,7 @@ class collectionDatabase {
     try{
       spreadNames = spreadNames || 'CapturePayment';
       this.spreadSheet.getSheetByName(spreadNames)
-        .deleteRow(this.getCapturedPaymentMap()[pymId.toUpperCase()].getRowNumber() + 1);
+        .deleteRow(this.getCapturedPayment(pymId.toUpperCase()).getRowNumber() + 1);
       SpreadsheetApp.flush();
       return 'Successfully deleted the row with the trip id: '+ pymId;
     }catch(e){
@@ -393,20 +393,28 @@ class collectionDatabase {
    * 
    */
   getCapturedPayment(payId){
-
+    let payment = this.queryData(
+      '=arrayformula(QUERY( {CapturePayment!A:F , ROW(CapturePayment!A:F)},"Select Col1, Col2, Col3, Col4, Col5, Col6, Col7 Where Col1 = \'' + payId + '\'",1))',
+      'QuerySet'
+    );
+    if(payment.length > 1){
+      let data = payment[1];
+      return new capturePayment(data[0].toUpperCase(), data[1].toUpperCase(), new Date(data[2]), parseFloat(data[3]), data[4]);
+    }
+    return undefined;
   }
 
   updateCapturedPayment(pymId, head, details){
     let resp = '';
     try{
       if(head.toLowerCase() == 'user id'){
-        resp = this.getCapturedPaymentMap()[pymId.toUpperCase()].updateUserId(details.toUpperCase());
+        resp = this.getCapturedPayment(pymId.toUpperCase()).updateUserId(details.toUpperCase());
       }
       else if(head.toLowerCase() == 'date of payment'){
-        resp = this.getCapturedPaymentMap()[pymId.toUpperCase()].updatePaymentDate(details);
+        resp = this.getCapturedPayment(pymId.toUpperCase()).updatePaymentDate(details);
       }
       else if(head.toLowerCase() == 'amount payed'){
-        resp = this.getCapturedPaymentMap()[pymId.toUpperCase()].updatePaymentAmount(details);
+        resp = this.getCapturedPayment(pymId.toUpperCase()).updatePaymentAmount(details);
       }
       else{
         resp = 'Invalid key: '+ head;
