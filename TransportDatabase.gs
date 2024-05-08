@@ -365,4 +365,16 @@ class transportDatabaseSheet {
       return 'Failed to update balance.'
     }
   }
+
+  getuserFile(userId, filePurpose){
+    let userFile = this.createQuery(
+      '=QUERY(UserFiles!A:H,"Select A, B, C, D, E, F, G, H Where A = \'' + userId + '\' and LOWER(G) = \'' + filePurpose.toLowerCase() + '\' ",1)'
+    )
+    if(userFile.length > 1){
+      let data = userFile[1];
+      return new allUserData(data[0], data[3], data[1]);
+    }
+    return undefined;
+
+  }
 }

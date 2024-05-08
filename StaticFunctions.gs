@@ -93,4 +93,10 @@ class generalFunctions{
     }
     return day;
   }
+
+  static getQueryData(query, spreadSheet, range){
+    spreadSheet.getRange(range).setValue(query);
+    SpreadsheetApp.flush();
+    return spreadSheet.getDataRange().getValues();
+  }
 }

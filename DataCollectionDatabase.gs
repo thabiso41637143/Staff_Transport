@@ -404,6 +404,9 @@ class collectionDatabase {
     return undefined;
   }
 
+  /**
+   * 
+   */
   updateCapturedPayment(pymId, head, details){
     let resp = '';
     try{

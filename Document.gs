@@ -191,7 +191,8 @@ class document {
 class allUserData{
   constructor(userId, spreadSheetId, foldId){
     this.userId = userId;
-    this.folder = DriveApp.getFolderById(foldId);
+    this.folderId = foldId;
+    this.folder = DriveApp.getFolderById(this.folderId);
     this.spreadSheetId = spreadSheetId;
     this.spreadSheet = SpreadsheetApp.openById(this.spreadSheetId);
   }
@@ -209,7 +210,7 @@ class allUserData{
     spreadSheetName = spreadSheetName || 'QueryData';
     this.spreadSheet.getSheetByName(spreadSheetName).getRange('A1').setValue(query);
     SpreadsheetApp.flush();
-    return this.spreadSheet.getSheetByName(spreadSheetName).getRange().getValues();
+    return this.spreadSheet.getSheetByName(spreadSheetName).getDataRange().getValues();
   }
 
   /**
@@ -388,5 +389,49 @@ class allUserData{
     }
     SpreadsheetApp.flush();
     return 'Successfully updated user alert messages.';
+  }
+
+  /**
+   * 
+   */
+  getCapturedPayment(payId, spName){
+    spName = spName || 'CapturePayment';
+    let payment = this.submitQuery(
+      '=arrayformula(QUERY( {' + spName + '!A:F , ROW(' + spName + '!A:F)},"Select Col1, Col2, Col3, Col4, Col5, Col6, Col7 Where Col1 = \'' + payId + '\'",1))', 
+      'QuerySheet'
+    );
+    if(payment.length > 1){
+      let data = payment[1];
+      return new capturePayment(data[0].toUpperCase(), data[1].toUpperCase(), new Date(data[2]), parseFloat(data[3]), data[4]
+      , this.spreadSheetId, spName);
+    }
+    return undefined;
+  }
+
+  /**
+   * 
+   */
+  getPaidTripsByPayId(payId, spName){
+    spName = spName || 'PaidTriphistory';
+    let payTrips = this.submitQuery(
+      '=arrayformula(QUERY( {' + spName + '!A:L , ROW(' + spName + '!A:L)},"Select Col1, Col2, Col3, Col4, Col5, Col6, Col7, Col8, Col9, Col10, Col11, Col12, Col13 Where Col12 = \'' + payId + '\'",1))', 
+      'QuerySheet'
+    );
+    if(payTrips.length > 1){
+      return payTrips;
+    }
+  }
+
+  /**
+   * 
+   */
+  getTotalPaidTrips(payId, spName){
+     spName = spName || 'PaidTriphistory';
+     let total = 0.00;
+    let pTrips = this.getPaidTripsByPayId(payId, spName);
+    for(let i = 1; i < pTrips.length; i++){
+      total += pTrips[i][9];
+    }
+    return total;
   }
 }

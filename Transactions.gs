@@ -4,7 +4,7 @@
  */
 class accountTransaction{
   constructor(transId, accNumb, tripId, transType, transDate, transAmt, bal, comm, spreadSheetId, spreadSheetName){
-    this.transId = transId.toUpperCase();
+    this.transId = transId.toString().toUpperCase();
     this.accountNumb = parseInt(accNumb);
     this.tripId = tripId;
     this.transType = transType;
@@ -728,5 +728,54 @@ class transactionManager{
       acc.getDriverSummary()[this.driverId].updateNumbTrips();
       return 'Success fully captured trip details';
     }
+  }
+}
+
+/**
+ * 
+ */
+class rollBack{
+  constructor(dateCaptured, driverId, passId, oldAmount, newAmount, payDate, oldPayId, newPayId
+  , spreadSheetId, spreadSheetName){
+    this.dateCaptured = dateCaptured;
+    this.driverId = driverId;
+    this.passId = passId;
+    this.oldAmount = oldAmount;
+    this.newAmount = newAmount;
+    this.payDate = payDate;
+    this.oldPayId = oldPayId;
+    this.newPayId = newPayId;
+    this.spreadSheetId = spreadSheetId || '1y4nNhIe8omKyTMjaB7XrPcL0CqKGMXr2x9W7Y8FLZEU';
+    this.spreadSheetName = spreadSheetName || 'RollBackPayment';
+    this.spreadSheet = SpreadsheetApp.openById(this.spreadSheetId).getSheetByName(this.spreadSheetName);
+  }
+
+  getNewPayId(summaryId){
+    let idTr = new idTracker();
+    summaryId = summaryId || 205;
+    this.newPayId = idTr.getSummaryIdMap()[summaryId].cretatePaymentId();
+    return this.newPayId;
+  }
+
+  rollBackPayment(){
+    let dataCol = new collectionDatabase();
+    let payment = dataCol.getCapturedPayment(this.oldPayId);
+    console.log(payment);
+    if(payment == undefined){
+      let tdabase = new transportDatabaseSheet();
+      let userFile = tdabase.getuserFile(this.passId, 'User History');
+      if(userFile.getCapturedPayment(this.oldPayId) == undefined){
+        console.error('This payment Id of ' + this.oldPayId + ' doesn\'t exist');
+        return undefined;
+      }
+      // let trips = userFile.getPaidTripsByPayId(payId);
+      let trips = userFile.getTotalPaidTrips(this.oldPayId);
+      console.log(trips);
+      //console.log(userFile.getCapturedPayment(payId));
+    }
+  }
+
+  rollBackTrip(tripId, passId){
+
   }
 }
