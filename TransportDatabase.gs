@@ -211,7 +211,7 @@ class transportDatabaseSheet {
     return undefined;
   }
 
-    /**
+  /**
    * @return a user summary object from the Database tracker.
    */
   getUserSummary(userId){
@@ -227,6 +227,7 @@ class transportDatabaseSheet {
     }
     return undefined;
   }
+
   removeUser(userId, spreadNames){
     try{
         userId = userId.toString().replaceAll(" ", "");
@@ -251,7 +252,6 @@ class transportDatabaseSheet {
         deleteRow((this.getUserSummaryMap(spreadNames)[userId.toUpperCase()].getRowNumber()) + 1);
         SpreadsheetApp.flush();
         return 'Successfully delete the user with the following ID '+ userId;
-
     }catch(e){
       console.error(e);
       return "Failed to delete the record with the following ID: "+ userId;
@@ -338,6 +338,7 @@ class transportDatabaseSheet {
     SpreadsheetApp.flush();
     return this.spreadSheet.getSheetByName(spName).getDataRange().getValues();
   }
+  
   getAccout(userId, spName){
     spName = spName || 'QuerySet';
     let row = 1;

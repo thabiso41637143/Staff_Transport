@@ -48,6 +48,7 @@ class logTracker {
       }
     }
   }
+
   getRowNumber(id, spName, col){
     col = col || 0;
     let data = this.spreadSheet.getSheetByName(spName).getDataRange().getValues();
@@ -78,6 +79,7 @@ class logTracker {
     usLog.addCol();
     return 'Updated the ' + spName + ' with new Ids.';
   }
+  
   updatePaymentLog(menue, spName) {
     spName = spName || 'PaymentLog';
     menue = menue || 'addnewpayment';

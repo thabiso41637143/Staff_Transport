@@ -444,7 +444,6 @@ class transactionManager{
       console.info(logTracker.setStatus('Closed', 'Successfull updated payment status to closed on the transaction log.'));
       logTracker.closePayment();
     }
-    
     return 'Successfully processed the trip with the following TripId: '+ pasTrip.tripId;
   }
 
@@ -478,7 +477,6 @@ class transactionManager{
     console.info(transHist.addTrans(transId.getTransactionList(), 'TransactionIDHistory'));
     //remove the id from the id tracker.
     transId.tranId.removeId();
-
   }
   
   /**
@@ -546,9 +544,9 @@ class transactionManager{
 
     //remove the trip from the captured datacollector
     pasTrip.removeTrip();
-
     return true;
   }
+  
   setTripDetails_1(passAccount, driverAcc, tripData, tripId, acc, idTr){
     /**
      * - The amount on the Passenger account is debited by the trip amount.

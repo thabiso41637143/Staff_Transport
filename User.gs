@@ -147,5 +147,4 @@ class userDetails{
       .setValue(data);
       SpreadsheetApp.flush();
   }
-  
 }

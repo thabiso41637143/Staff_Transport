@@ -203,15 +203,6 @@ class allUserData{
   getUrl(){
     return this.spreadSheet.getUrl();
   }
-  /**
-   * 
-   */
-  submitQuery(query, spreadSheetName){
-    spreadSheetName = spreadSheetName || 'QueryData';
-    this.spreadSheet.getSheetByName(spreadSheetName).getRange('A1').setValue(query);
-    SpreadsheetApp.flush();
-    return this.spreadSheet.getSheetByName(spreadSheetName).getDataRange().getValues();
-  }
 
   /**
    * 
@@ -256,7 +247,6 @@ class allUserData{
       console.error(e);
       return 'An error occured while trying to update PaidTransactionHistory: ' + e;
     }
-
   }
 
   /**
@@ -394,11 +384,13 @@ class allUserData{
   /**
    * 
    */
-  getCapturedPayment(payId, spName){
+  getCapturedPayment(payId, spName, spreadSheetName, range){
     spName = spName || 'CapturePayment';
-    let payment = this.submitQuery(
+    spreadSheetName = spreadSheetName || 'QuerySheet';
+    range = range || 'A1';
+    let payment = generalFunctions.getQueryData(
       '=arrayformula(QUERY( {' + spName + '!A:F , ROW(' + spName + '!A:F)},"Select Col1, Col2, Col3, Col4, Col5, Col6, Col7 Where Col1 = \'' + payId + '\'",1))', 
-      'QuerySheet'
+      this.spreadSheet.getSheetByName(spreadSheetName), range
     );
     if(payment.length > 1){
       let data = payment[1];
@@ -411,11 +403,13 @@ class allUserData{
   /**
    * 
    */
-  getPaidTripsByPayId(payId, spName){
+  getPaidTripsByPayId(payId, spName, spreadSheetName, range){
     spName = spName || 'PaidTriphistory';
-    let payTrips = this.submitQuery(
+    spreadSheetName = spreadSheetName || 'QuerySheet';
+    range = range || 'A1';
+    let payTrips = generalFunctions.getQueryData(
       '=arrayformula(QUERY( {' + spName + '!A:L , ROW(' + spName + '!A:L)},"Select Col1, Col2, Col3, Col4, Col5, Col6, Col7, Col8, Col9, Col10, Col11, Col12, Col13 Where Col12 = \'' + payId + '\'",1))', 
-      'QuerySheet'
+      this.spreadSheet.getSheetByName(spreadSheetName), range
     );
     if(payTrips.length > 1){
       return payTrips;
@@ -433,5 +427,11 @@ class allUserData{
       total += pTrips[i][9];
     }
     return total;
+  }
+  /**
+   * 
+   */
+  getRowNumber(spName){
+
   }
 }

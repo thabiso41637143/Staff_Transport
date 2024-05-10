@@ -1,3 +1,7 @@
+
+/**
+ * 
+ */
 class account {
   constructor(accNumb, userId, accBalance, spreadSheetId, spreadSheetName){
     this.accountNumb = accNumb;

@@ -124,5 +124,4 @@ class idTracker {
       return undefined;
     }
   }
-
 }

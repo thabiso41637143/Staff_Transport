@@ -126,15 +126,11 @@ class attendance{
     return msg;
   }
 
-  /*
-  */
   getMessageList(){
     return [this.messageId, this.fromId, this.sendTo, this.date, 
         this.message, this.status, this.comments];
   }
 
-  /*
-  */
   getMessageMap(rowHeading){
     rowHeading = rowHeading || 0;
     let msgMap = new Map();
@@ -152,8 +148,7 @@ class attendance{
   deleteMsg(){
     this.spreadSheetData.deleteRow(this.getRowNumber() + 1);
   }
-  /*
-  */
+
   addMessage(){
     try{
       this.spreadSheetData.appendRow(this.getMessageList());
@@ -207,7 +202,6 @@ class attendance{
  */
 class captureReports{
   constructor(messageId,	userId,	messageDescrip,	status,	comments, dateCaptured, spreadSheetId, spreadSheetName){
-
     this.messageId = messageId;
     this.dateCaptured = Utilities.formatDate(new Date(dateCaptured), 'GMT+0200', 'd MMMM yyyy, HH:mm:ss') || 
     Utilities.formatDate(new Date(), 'GMT+0200', 'd MMMM yyyy, HH:mm:ss');
