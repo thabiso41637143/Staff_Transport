@@ -442,4 +442,21 @@ class allUserData{
       '=arrayformula(QUERY({' + spreadSheetName + '!A:A , ROW(' + spreadSheetName + '!A:A)}, "Select Col1, Col2 Where Col1 = \'' + id + '\'", 0))'
       , this.spreadSheet.getSheetByName(spName), 'A1')[0][1] - 1;
   }
+
+  updatePaidPaymentIdTrip(tripId, newPayId, spreadSheetName, rowId, col){
+    spreadSheetName = spreadSheetName || 'PaidTriphistory';
+    col = col || 12;
+    rowId = rowId || this.getRowNumber(tripId, spreadSheetName) + 1;
+    this.updateCell(rowId, col, newPayId, spreadSheetName);
+    return 'Successfully updated Payment old payment id with a new payment Id of '+ newPayId;
+  }
+
+  deleteRow(rowPos, spreadSheetName){
+    this.spreadSheet.getSheetByName(spreadSheetName).deleteRow(rowPos);
+  }
+
+  updateCell(r, c, data, spreadSheetName){
+    this.spreadSheet.getSheetByName(spreadSheetName).getRange(r,c).setValue(data);
+    SpreadsheetApp.flush();
+  }
 }
