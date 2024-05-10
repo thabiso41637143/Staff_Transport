@@ -406,6 +406,7 @@ class allUserData{
   getPaidTripsByPayId(payId, spName, spreadSheetName, range){
     spName = spName || 'PaidTriphistory';
     spreadSheetName = spreadSheetName || 'QuerySheet';
+    generalFunctions.addSpreadSheet(spreadSheetName, this.spreadSheet);
     range = range || 'A1';
     let payTrips = generalFunctions.getQueryData(
       '=arrayformula(QUERY( {' + spName + '!A:L , ROW(' + spName + '!A:L)},"Select Col1, Col2, Col3, Col4, Col5, Col6, Col7, Col8, Col9, Col10, Col11, Col12, Col13 Where Col12 = \'' + payId + '\'",1))', 
@@ -428,10 +429,17 @@ class allUserData{
     }
     return total;
   }
+
   /**
    * 
    */
-  getRowNumber(spName){
-
+  getRowNumber(id, spreadSheetName, spName){
+    spreadSheetName = spreadSheetName || '';
+    id = id || '';
+    spName = spName || 'QuerySheet';
+    generalFunctions.addSpreadSheet(spName, this.spreadSheet);
+    return generalFunctions.getQueryData(
+      '=arrayformula(QUERY({' + spreadSheetName + '!A:A , ROW(' + spreadSheetName + '!A:A)}, "Select Col1, Col2 Where Col1 = \'' + id + '\'", 0))'
+      , this.spreadSheet.getSheetByName(spName), 'A1')[0][1] - 1;
   }
 }

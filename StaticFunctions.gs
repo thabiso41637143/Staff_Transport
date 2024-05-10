@@ -99,4 +99,9 @@ class generalFunctions{
     SpreadsheetApp.flush();
     return spreadSheet.getDataRange().getValues();
   }
+
+  static addSpreadSheet(spName, spreadSheet){
+    if(!spreadSheet.getSheetByName(spName))
+      spreadSheet.insertSheet(spName);
+  }
 }
