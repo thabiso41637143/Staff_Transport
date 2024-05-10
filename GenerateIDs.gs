@@ -34,15 +34,11 @@ class summaryID{
     return summMap;
   }
 
-  getRowNumber(colNumber){
-    colNumber = colNumber || 0;
-    let data = this.spreadSheetData.getDataRange().getValues();
-    for(let i = 0; i < data.length; i++){
-      if(data[i][colNumber].toString().toUpperCase() == this.summaryId){
-        return i;
-      }
-    }
-    return -1;
+  getRowNumber(spName){
+    spName = spName || 'ReadQueryData';
+    return generalFunctions.getQueryData(
+      '=arrayformula(QUERY({' + this.spreadSheetName + '!A:A , ROW(' + this.spreadSheetName + '!A:A)}, "Select Col1, Col2 Where Col1 = ' + this.summaryId + '", 0))'
+      , this.spreadSheet.getSheetByName(spName), 'A1')[0][1] - 1;
   }
 
   updateSpreadSheetCell(r, c, value, msg){
@@ -64,11 +60,7 @@ class summaryID{
 
   getQueryData(query, spName){
     spName = spName || 'ReadQueryData';
-    this.spreadSheet.getSheetByName(spName)
-    .getRange('A1').setValue(query);
-    SpreadsheetApp.flush();
-    return this.spreadSheet.getSheetByName(spName)
-    .getDataRange().getValues();
+    return generalFunctions.getQueryData(query,this.spreadSheet.getSheetByName(spName), 'A1');
   }
 
   getUserIDMap(startRow, spName){
@@ -88,7 +80,7 @@ class summaryID{
     let msg = this.getQueryData(
       '=QUERY(MessageId!A1:E, "Select A, B, C, D, E where A = \'' + msgId + '\'",1)'
       )[1];
-    return new new messageID(msg[0].toUpperCase(), msg[1], msg[2], msg[3]);
+    return new messageID(msg[0].toUpperCase(), msg[1], msg[2], msg[3]);
   }
 
   getMessageIDMap(startRow, spName){
@@ -411,8 +403,10 @@ class generatedIDs{
     this.groupId = group;
     this.status = status;
     this.spreadSheetId = spreadSheetId || '18kBtVorjQewTZMKGAx2Jw-So5wNf0Whu756S3pjnY7E';
+    this.spreadSheetName = spreadSheetName;
     this.spreadSheetData = SpreadsheetApp.openById(this.spreadSheetId)
-      .getSheetByName(spreadSheetName);
+      .getSheetByName(this.spreadSheetName);
+    this.spreadSheet = SpreadsheetApp.openById(this.spreadSheetId);
   }
 
   addNewId(){
@@ -426,15 +420,16 @@ class generatedIDs{
     return [this.generatedId.toUpperCase(), this.groupId, this.status];
   }
   
-  getRowNumber(colNumber){
-    colNumber = colNumber || 0;
-    let data = this.spreadSheetData.getDataRange().getValues();
-    for(let i = 0; i < data.length; i++){
-      if(data[i][colNumber].toString().toUpperCase() == this.generatedId){
-        return i;
-      }
-    }
-    return -1;
+  getRowNumber(spName){
+    spName = spName || 'ReadQueryData';
+    if(this.spreadSheetName.toLowerCase() != 'accountid')
+      return generalFunctions.getQueryData(
+        '=arrayformula(QUERY({' + this.spreadSheetName + '!A:A , ROW(' + this.spreadSheetName + '!A:A)}, "Select Col1, Col2 Where Col1 = \'' + this.generatedId + '\'", 0))'
+        , this.spreadSheet.getSheetByName(spName), 'A1')[0][1] - 1;
+
+    return generalFunctions.getQueryData(
+        '=arrayformula(QUERY({' + this.spreadSheetName + '!A:A , ROW(' + this.spreadSheetName + '!A:A)}, "Select Col1, Col2 Where Col1 = ' + this.generatedId + '", 0))'
+        , this.spreadSheet.getSheetByName(spName), 'A1')[0][1] - 1;
   }
 
   removeId(rowNumb){

@@ -18,17 +18,14 @@ class accountTransaction{
     this.spreadSheetData = SpreadsheetApp
       .openById(this.spreadSheetId)
       .getSheetByName(this.spreadSheetName);
+    this.spreadSheet = SpreadsheetApp.openById(this.spreadSheetId);
   }
 
-  getRowNumber(colNumber){
-    colNumber = colNumber || 0;
-    let data = this.spreadSheetData.getDataRange().getValues();
-    for(let i = 0; i < data.length; i++){
-      if(data[i][colNumber] == this.transId){
-        return i;
-      }
-    }
-    return -1;
+  getRowNumber(spName){
+    spName = spName || 'QuerySet';
+    return generalFunctions.getQueryData(
+      '=arrayformula(QUERY({' + this.spreadSheetName + '!A:A , ROW(' + this.spreadSheetName + '!A:A)}, "Select Col1, Col2 Where Col1 = \'' + this.transId + '\'", 0))'
+      , this.spreadSheet.getSheetByName(spName), 'A1')[0][1] - 1;
   }
   
   updateComments(com, col){
@@ -735,8 +732,8 @@ class transactionManager{
  * 
  */
 class rollBack{
-  constructor(dateCaptured, driverId, passId, oldAmount, newAmount, payDate, oldPayId, newPayId
-  , spreadSheetId, spreadSheetName){
+  constructor(dateCaptured, driverId, passId, oldAmount, newAmount, payDate, oldPayId,
+   spreadSheetId, spreadSheetName){
     this.dateCaptured = dateCaptured;
     this.driverId = driverId;
     this.passId = passId;
@@ -744,7 +741,7 @@ class rollBack{
     this.newAmount = newAmount;
     this.payDate = payDate;
     this.oldPayId = oldPayId;
-    this.newPayId = newPayId;
+    this.newPayId = '';
     this.spreadSheetId = spreadSheetId || '1y4nNhIe8omKyTMjaB7XrPcL0CqKGMXr2x9W7Y8FLZEU';
     this.spreadSheetName = spreadSheetName || 'RollBackPayment';
     this.spreadSheet = SpreadsheetApp.openById(this.spreadSheetId).getSheetByName(this.spreadSheetName);

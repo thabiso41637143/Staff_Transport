@@ -11,17 +11,15 @@ class capturePayment {
     this.spreadSheetData = SpreadsheetApp
       .openById(this.spreadSheetId)
       .getSheetByName(this.spreadSheetName);
+    this.spreadSheet = SpreadsheetApp
+      .openById(this.spreadSheetId);
   }
 
-  getRowNumber(colNumber){
-    colNumber = colNumber || 0;
-    let data = this.spreadSheetData.getDataRange().getValues();
-    for(let i = 0; i < data.length; i++){
-      if(data[i][colNumber].toString().toUpperCase() == this.paymentId){
-        return i;
-      }
-    }
-    return -1;
+  getRowNumber(spName){
+    spName = spName || 'QuerySet';
+    return generalFunctions.getQueryData(
+      '=arrayformula(QUERY({' + this.spreadSheetName + '!A:A , ROW(' + this.spreadSheetName + '!A:A)}, "Select Col1, Col2 Where Col1 = \'' + this.paymentId + '\'", 0))'
+      , this.spreadSheet.getSheetByName(spName), 'A1')[0][1] - 1;
   }
 
   removePayment(){

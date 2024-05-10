@@ -1,5 +1,8 @@
-class userSummary {
 
+/**
+ * 
+ */
+class userSummary {
   constructor(userId, totNumbDays, amountPaid, outAmount, totNumbUpaidDays, totNumbPaidDays, spreadSheetId, spreadSheetName){
     this.userId = userId;
     this.totNumbDays = totNumbDays;
@@ -13,6 +16,8 @@ class userSummary {
     this.spreadSheetData = SpreadsheetApp
       .openById(this.spreadSheetId)
       .getSheetByName(this.spreadSheetName); 
+    this.spreadSheet = SpreadsheetApp
+      .openById(this.spreadSheetId);
   }
 
   getUserSummaryList(){
@@ -56,15 +61,11 @@ class userSummary {
     return msg;
   }
 
-  getRowNumber(colNumber){
-    colNumber = colNumber || 0;
-    let data = this.spreadSheetData.getDataRange().getValues();
-    for(let i = 0; i < data.length; i++){
-      if(data[i][colNumber].toString().toUpperCase() == this.userId){
-        return i;
-      }
-    }
-    return -1;
+  getRowNumber(spName){
+    spName = spName || 'QuerySet';
+    return generalFunctions.getQueryData(
+      '=arrayformula(QUERY({' + this.spreadSheetName + '!A:A , ROW(' + this.spreadSheetName + '!A:A)}, "Select Col1, Col2 Where Col1 = \'' + this.userId + '\'", 0))'
+      , this.spreadSheet.getSheetByName(spName), 'A1')[0][1] - 1;
   }
 
   updateAmountPaid(amountPaid, col){
@@ -148,6 +149,8 @@ class driverSummary{
     this.spreadSheetData = SpreadsheetApp
       .openById(this.spreadSheetId)
       .getSheetByName(this.spreadSheetName); 
+    this.spreadSheet = SpreadsheetApp
+      .openById(this.spreadSheetId);
   }
 
   getDriverSummaryList(){
@@ -170,15 +173,11 @@ class driverSummary{
     return msg;
   }
 
-  getRowNumber(colNumber){
-    colNumber = colNumber || 0;
-    let data = this.spreadSheetData.getDataRange().getValues();
-    for(let i = 0; i < data.length; i++){
-      if(data[i][colNumber].toString().toUpperCase() == this.driverId){
-        return i;
-      }
-    }
-    return -1;
+  getRowNumber(spName){
+    spName = spName || 'QuerySet';
+    return generalFunctions.getQueryData(
+      '=arrayformula(QUERY({' + this.spreadSheetName + '!A:A , ROW(' + this.spreadSheetName + '!A:A)}, "Select Col1, Col2 Where Col1 = \'' + this.driverId + '\'", 0))'
+      , this.spreadSheet.getSheetByName(spName), 'A1')[0][1] - 1;
   }
 
   updateNumbTrips(numbTrips, col){
@@ -227,23 +226,22 @@ class userFolders{
     this.spreadSheetData = SpreadsheetApp
       .openById(this.spreadSheetId)
       .getSheetByName(this.spreadSheetName); 
+    this.spreadSheet = SpreadsheetApp
+      .openById(this.spreadSheetId);
   }
 
-  getRowNumber(colNumber){
-    colNumber = colNumber || 0;
-    let data = this.spreadSheetData.getDataRange().getValues();
-    for(let i = 0; i < data.length; i++){
-      if(data[i][colNumber].toString().toUpperCase() == this.userId){
-        return i;
-      }
-    }
-    return -1;
+  getRowNumber(spName){
+    spName = spName || 'QuerySet';
+    return generalFunctions.getQueryData(
+      '=arrayformula(QUERY({' + this.spreadSheetName + '!A:A , ROW(' + this.spreadSheetName + '!A:A)}, "Select Col1, Col2 Where Col1 = \'' + this.userId + '\'", 0))'
+      , this.spreadSheet.getSheetByName(spName), 'A1')[0][1] - 1;
   }
 
   getUserFolderList(){
     return [this.userId, this.folderId, this.folderName,
     this.docId, this.docName, this.comments];
   }
+  
   getFolder(){
     
   }
