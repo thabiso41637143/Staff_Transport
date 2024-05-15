@@ -732,14 +732,14 @@ class transactionManager{
 class rollBack{
   constructor(dateCaptured, driverId, passId, oldAmount, newAmount, payDate, oldPayId,
    spreadSheetId, spreadSheetName){
-    this.dateCaptured = dateCaptured;
+    this.dateCaptured = generalFunctions.formatDate(dateCaptured);
     this.driverId = driverId;
     this.passId = passId;
-    this.oldAmount = oldAmount;
-    this.newAmount = newAmount;
-    this.payDate = payDate;
+    this.oldAmount = parseFloat(oldAmount);
+    this.newAmount = parseFloat(newAmount);
+    this.payDate = generalFunctions.formatDate(payDate);
     this.oldPayId = oldPayId;
-    this.newPayId = '';
+    this.newPayId = 'test';
     this.spreadSheetId = spreadSheetId || '1y4nNhIe8omKyTMjaB7XrPcL0CqKGMXr2x9W7Y8FLZEU';
     this.spreadSheetName = spreadSheetName || 'RollBackPayment';
     this.spreadSheet = SpreadsheetApp.openById(this.spreadSheetId).getSheetByName(this.spreadSheetName);
@@ -753,6 +753,8 @@ class rollBack{
   }
 
   rollBackPayment(){
+    //Create a new payment Id
+    //this.getNewPayId();
     let dataCol = new collectionDatabase();
     let payment = dataCol.getCapturedPayment(this.oldPayId);
     console.log(payment);
@@ -763,10 +765,142 @@ class rollBack{
         console.error('This payment Id of ' + this.oldPayId + ' doesn\'t exist');
         return undefined;
       }
-      // let trips = userFile.getPaidTripsByPayId(payId);
-      let trips = userFile.getTotalPaidTrips(this.oldPayId);
-      console.log(trips);
-      //console.log(userFile.getCapturedPayment(payId));
+
+      //Remove the error amount from the account
+      // tdabase.updateAcountBalance('userid', this.passId, - parseFloat(this.oldAmount));
+
+      //Add the new payment from the account
+      // tdabase.updateAcountBalance('userid', this.passId, parseFloat(this.newAmount));
+
+      this.updatePayId(userFile);
+
+    }
+  }
+
+  updatePayId(userFile){
+    let trips;/*
+    if(userFile.getTotalPaidTrips(this.oldPayId) <= this.newAmount){
+      trips = userFile.getPaidTripsByPayId(this.oldPayId);
+      for(let i = 0; i < trips.length; i++){
+        console.log(userFile.updatePaidPaymentIdTrip(trips[i][12], this.newPayId));
+      }
+    }
+    else{
+      trips = userFile.getPaidTripsByPayId(this.oldPayId);
+      for(let i = 0; i < trips.length; i++){
+        if(this.newAmount >= trips[i][9])
+        {
+          console.log(userFile.updatePaidPaymentIdTrip(trips[i][12], this.newPayId));
+          this.newAmount = this.newAmount - trips[i][9];
+        }
+      }
+    }
+  */
+    let rollBackTrips = [];
+    let rollBackTripsId = [];
+    let rollBackTransId = [];
+    let rollBackTrans = [];
+
+    trips = userFile.getPaidTripsByPayId(this.oldPayId);
+    console.log(this.newAmount);
+
+    if(this.newAmount > 0 && trips.length > 1){
+      console.log(userFile.updatePaidPaymentIdTrip(trips[0][12], this.newPayId));
+      console.log(userFile.updateAmontPaidTrip(trips[0][12], this.newAmount));
+      console.log(userFile.updateAmontRemainTrip(trips[0][12], (trips[0][9] - this.newAmount)));
+      let t = userFile.getTripByTripId(trips[0][0]).pop();
+      t[2] = (trips[0][9] - this.newAmount);
+      t[8] = 'The trip was rolled back.';
+      t.pop();
+      rollBackTrips.push(t);
+    }
+    trips = userFile.getPaidTripsByPayId(this.oldPayId);
+
+    rollBackTrips = this.getRollBackTrips(rollBackTrips, userFile, trips);
+    console.log(rollBackTrips);
+
+    rollBackTripsId = this.getRollBackTripsId([], userFile, rollBackTrips.slice(0, rollBackTrips.length));
+    console.log(rollBackTripsId);
+
+    rollBackTrans = this.getRollBackTrans([], userFile, rollBackTrips.slice(0, rollBackTrips.length));
+    console.log(rollBackTrans);
+
+    rollBackTransId = this.getRollBackTransId([], userFile, rollBackTrans.slice(0, rollBackTrans.length));
+    console.log(rollBackTransId);
+
+  }
+
+  /**
+   * Roll back all unpaid trips
+   */
+  getRollBackTrips(rollBackTrips, userFile, tripsList){
+    if(tripsList.length < 1){
+      return rollBackTrips;
+    }
+    else{
+      rollBackTrips.push(userFile.getTripByTripId(tripsList.pop()[0]).pop());
+      rollBackTrips[rollBackTrips.length - 1][8] = 'The trip was rolled back.';
+      rollBackTrips[rollBackTrips.length - 1].pop();
+      return this.getRollBackTrips(rollBackTrips, userFile, tripsList); 
+    }
+  }
+
+  /**
+   * Roll back the transactions of unpaid trips
+   */
+  getRollBackTripsId(rollBackTripsId, userFile, rollBackTripList){
+    if(rollBackTripList.length < 1){
+      return rollBackTripsId;
+    }
+    else{
+      rollBackTripsId.push(userFile.getTripIdByTripId(rollBackTripList.pop()[0]).pop());
+      rollBackTripsId[rollBackTripsId.length - 1][3] = 'The trip Id was rolled back.';
+      rollBackTripsId[rollBackTripsId.length - 1][2] = 'RollBack';
+      rollBackTripsId[rollBackTripsId.length - 1].pop();
+      return this.getRollBackTripsId(rollBackTripsId, userFile, rollBackTripList); 
+    }
+  }
+
+  /**
+   * 
+   */
+  getRollBackTrans(rollBackTrans, userFile, rollBackTripList){
+    if(rollBackTripList.length < 1){
+      return rollBackTrans;
+    }
+    else{
+      let trip = rollBackTripList.pop();
+      let trans = userFile.getTransByTripId(trip[0])
+      for(let i = 0; i < trans.length; i++){
+        rollBackTrans.push(trans[i]);
+        if(generalFunctions.getPosNumber(rollBackTrans[rollBackTrans.length - 1][5]) != trip[2]){
+          if(rollBackTrans[rollBackTrans.length - 1][5] > 0){
+            rollBackTrans[rollBackTrans.length - 1][5] = trip[2];
+          }
+          else if(rollBackTrans[rollBackTrans.length - 1][5] < 0){
+            rollBackTrans[rollBackTrans.length - 1][5] = trip[2] * -1;
+          }
+        }
+        rollBackTrans[rollBackTrans.length - 1][7] = 'This transaction has been rolled back';
+        rollBackTrans[rollBackTrans.length - 1].pop();
+      }
+      return this.getRollBackTrans(rollBackTrans, userFile, rollBackTripList);
+    }
+  }
+
+  /**
+   * 
+   */
+  getRollBackTransId(rollBackTransId, userFile, rollBackTransList){
+    if(rollBackTransList.length < 1){
+      return rollBackTransId;
+    }
+    else{
+      rollBackTransId.push(userFile.getTransIdByTransId(rollBackTransList.pop()[0]).pop());
+      rollBackTransId[rollBackTransId.length - 1][4] = 'This transaction id has been rolled back';
+      rollBackTransId[rollBackTransId.length - 1][2] = 'RollBack';
+      rollBackTransId[rollBackTransId.length - 1].pop();
+      return this.getRollBackTransId(rollBackTransId, userFile, rollBackTransList);
     }
   }
 

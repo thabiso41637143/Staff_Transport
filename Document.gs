@@ -408,13 +408,54 @@ class allUserData{
     spreadSheetName = spreadSheetName || 'QuerySheet';
     generalFunctions.addSpreadSheet(spreadSheetName, this.spreadSheet);
     range = range || 'A1';
-    let payTrips = generalFunctions.getQueryData(
-      '=arrayformula(QUERY( {' + spName + '!A:L , ROW(' + spName + '!A:L)},"Select Col1, Col2, Col3, Col4, Col5, Col6, Col7, Col8, Col9, Col10, Col11, Col12, Col13 Where Col12 = \'' + payId + '\'",1))', 
+    return generalFunctions.getQueryData(
+      '=arrayformula(QUERY( {' + spName + '!A:L , ROW(' + spName + '!A:L)},"Select Col1, Col2, Col3, Col4, Col5, Col6, Col7, Col8, Col9, Col10, Col11, Col12, Col13 Where Col12 = \'' + payId + '\'",0))', 
       this.spreadSheet.getSheetByName(spreadSheetName), range
     );
-    if(payTrips.length > 1){
-      return payTrips;
-    }
+  }
+
+  getTripByTripId(tripId, spName, spreadSheetName, range){
+    spName = spName || 'UnpaidTripHistory';
+    spreadSheetName = spreadSheetName || 'QuerySheet';
+    generalFunctions.addSpreadSheet(spreadSheetName, this.spreadSheet);
+    range = range || 'A1';
+    return generalFunctions.getQueryData(
+      '=arrayformula(QUERY( {' + spName + '!A:I , ROW(' + spName + '!A:I)},"Select Col1, Col2, Col3, Col4, Col5, Col6, Col7, Col8, Col9, Col10 Where Col1 = \'' + tripId + '\'",0))', 
+      this.spreadSheet.getSheetByName(spreadSheetName), range
+    );
+  }
+
+  getTripIdByTripId(tripId, spName, spreadSheetName, range){
+    spName = spName || 'TripsIDHistory';
+    spreadSheetName = spreadSheetName || 'QuerySheet';
+    generalFunctions.addSpreadSheet(spreadSheetName, this.spreadSheet);
+    range = range || 'A1';
+    return generalFunctions.getQueryData(
+      '=arrayformula(QUERY( {' + spName + '!A:D , ROW(' + spName + '!A:D)},"Select Col1, Col2, Col3, Col4, Col5 Where Col1 = \'' + tripId + '\'",0))', 
+      this.spreadSheet.getSheetByName(spreadSheetName), range
+    );
+  }
+
+  getTransByTripId(tripId, spName, spreadSheetName, range){
+    spName = spName || 'UnpaidTransactionHistory';
+    spreadSheetName = spreadSheetName || 'QuerySheet';
+    generalFunctions.addSpreadSheet(spreadSheetName, this.spreadSheet);
+    range = range || 'A1';
+    return generalFunctions.getQueryData(
+      '=arrayformula(QUERY( {' + spName + '!A:H , ROW(' + spName + '!A:H)},"Select Col1, Col2, Col3, Col4, Col5, Col6, Col7, Col8, Col9 Where Col3 = \'' + tripId + '\'",0))', 
+      this.spreadSheet.getSheetByName(spreadSheetName), range
+    );
+  }
+  
+  getTransIdByTransId(transId, spName, spreadSheetName, range){
+    spName = spName || 'TransactionIDHistory';
+    spreadSheetName = spreadSheetName || 'QuerySheet';
+    generalFunctions.addSpreadSheet(spreadSheetName, this.spreadSheet);
+    range = range || 'A1';
+    return generalFunctions.getQueryData(
+      '=arrayformula(QUERY( {' + spName + '!A:E , ROW(' + spName + '!A:E)},"Select Col1, Col2, Col3, Col4, Col5, Col6 Where Col1 = \'' + transId + '\'",0))', 
+      this.spreadSheet.getSheetByName(spreadSheetName), range
+    );
   }
 
   /**
@@ -443,12 +484,25 @@ class allUserData{
       , this.spreadSheet.getSheetByName(spName), 'A1')[0][1] - 1;
   }
 
-  updatePaidPaymentIdTrip(tripId, newPayId, spreadSheetName, rowId, col){
+  updatePaidPaymentIdTrip(rowNumb, newPayId, col, spreadSheetName){
     spreadSheetName = spreadSheetName || 'PaidTriphistory';
     col = col || 12;
-    rowId = rowId || this.getRowNumber(tripId, spreadSheetName) + 1;
-    this.updateCell(rowId, col, newPayId, spreadSheetName);
+    this.updateCell(rowNumb, col, newPayId, spreadSheetName);
     return 'Successfully updated Payment old payment id with a new payment Id of '+ newPayId;
+  }
+
+  updateAmontPaidTrip(rowNumb, amount, col, spreadSheetName){
+    spreadSheetName = spreadSheetName || 'PaidTriphistory';
+    col = col || 10;
+    this.updateCell(rowNumb, col, parseFloat(amount).toFixed(2), spreadSheetName);
+    return 'Amount paid updated to R'+ amount;
+  }
+
+  updateAmontRemainTrip(rowNumb, amount, col, spreadSheetName){
+    spreadSheetName = spreadSheetName || 'PaidTriphistory';
+    col = col || 11;
+    this.updateCell(rowNumb, col, parseFloat(amount).toFixed(2), spreadSheetName);
+    return 'Amount remaining updated to R'+ amount;
   }
 
   deleteRow(rowPos, spreadSheetName){
