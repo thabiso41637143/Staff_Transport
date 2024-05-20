@@ -3,11 +3,12 @@
  * 
  */
 class updateUserTemplates{
-  constructor(userId, spreadSheetName, spreadSheetId){
+  constructor(userId, mainFolderId, spreadSheetName, spreadSheetId){
     this.userId = userId;
     this.payTripHist;
     this.msgDoc;
     this.allUserHist;
+    this.mainFolderId = mainFolderId;
     this.userDatabase = new transportDatabaseSheet();
     this.dataColl = new collectionDatabase();
     this.spreadSheetName = spreadSheetName || 'UserFiles';
@@ -23,7 +24,8 @@ class updateUserTemplates{
    */
   getFile(filePurpose){
     return this.queryFiles(
-      '=QUERY(UserFiles!A:H,"Select A, B, C, D, E, F, G, H Where A = \'' + this.userId + '\' and LOWER(G) = \'' + filePurpose.toLowerCase() + '\'",1)'
+      '=ARRAYFORMULA(QUERY({UserFiles!A:H, ROW(UserFiles!A:H)},"Select Col1, Col2, Col3, Col4, Col5, Col6, Col7, Col8, Col9 Where Col1 = \'' 
+      + this.userId + '\' and LOWER(Col7) = \'' + filePurpose.toLowerCase() + '\' and Col2 = \'' + this.mainFolderId + '\'",1))'
     )[1];
   }
 
@@ -41,6 +43,49 @@ class updateUserTemplates{
     this.allUserHist = new allUserData(this.userId, userData[3], userData[1]);
   }
 
+  reCreateTripHistFile(){
+    let file = this.queryFiles(
+      '=ARRAYFORMULA(QUERY({UserFiles!A:H, ROW(UserFiles!A:H)},"Select Col1, Col2, Col3, Col4, Col5, Col6, Col7, Col8, Col9 Where Col4 = \'' 
+      + this.payTripHist.document.getId() + '\'",1))'
+    )[1];
+
+    //Delete the document and it links related to it.
+    this.spreadSheetData.deleteRow(file[8]) 
+    console.info(this.dataColl.deleteFileById(this.payTripHist.document.getId()));
+    this.payTripHist.deleteDocument();
+
+    //creating a new file.
+    let newUserFile = new createUserStructure(this.userId, this.payTripHist.folder.getId());
+    newUserFile.createUserFile('passengertrips');
+
+    //reInitialise all the user file
+    this.initFiles();
+    this.upateNamePasHist();
+
+    this.resertSheetChecklist('CapturePayment');
+    this.resertSheetChecklist('PaidTriphistory');
+
+    return 'Successfully re-created the user trip history for user Id: ' + this.userId;
+  }
+
+  resertSheetChecklist(spreadName){
+    //Resert the checklist of CapturePayment and PaidTriphistory sheets
+    this.allUserHist.resetUserCheckList(false, spreadName);
+  }
+
+  updateSheetsCols(){
+    this.allUserHist.addColunms();
+    return "Successfully updated the sheet columns";
+  }
+  
+  updateSheetCheckList(){
+    this.allUserHist.addColCheckLists();
+    return 'Completed checklist update.';
+  }
+
+  /**
+   * 
+   */
   getAllFileUrls(){
     let urlMap = new Map();
     urlMap['tripHistory'] = this.payTripHist.getDocUrl();
@@ -53,17 +98,19 @@ class updateUserTemplates{
    */
   queryFiles(query, spName){
     spName = spName || 'QuerySet';
-    this.spreadSheet.getSheetByName(spName).getRange('A1').setValue(query);
-    SpreadsheetApp.flush();
-    return  this.spreadSheet.getSheetByName(spName).getDataRange().getValues();
+    return generalFunctions.getQueryData(query, this.spreadSheet.getSheetByName(spName), 'A1');
+  }
+
+  upateNamePasHist(){
+    //replacing text from the document
+    this.payTripHist.replaceText({'<<PASSENGERNAME>>': this.userDatabase.getUser(this.userId).userFullNames});
   }
 
   /**
    * 
    */
   updateUserTripHistory(){
-    //replacing text from the document
-    this.payTripHist.replaceText({'<<PASSENGERNAME>>': this.userDatabase.getUser(this.userId).userFullNames});
+    this.upateNamePasHist();
 
     //updating the payment table
     let userPayList = new collectionDatabase();
@@ -80,6 +127,26 @@ class updateUserTemplates{
       console.info(this.payTripHist.addToRow(userTripList[i], 1, 1));
     }
     this.payTripHist.closeDoc();
+  }
+
+  /**
+   * 
+   */
+  updateUserTripHistory_1(){
+    //updating the payment table
+    let userPayList = this.allUserHist.getUserPaymentList();
+    for(let i = 0; i < userPayList.length; i++){
+      console.info(this.payTripHist.addToRow([userPayList[i].userId, generalFunctions.formatDate(userPayList[i].paymentDate), 'R ' + parseFloat(userPayList[i].amountPayed).toFixed(2)], 0, 1));
+    }
+
+    //updating the trip table.
+    let userTripList = this.allUserHist.getUserPaidTripHistory();
+    for(let i = 0; i < userTripList.length; i++){
+      console.info(this.payTripHist.addToRow(userTripList[i], 1, 1));
+    }
+
+    this.payTripHist.closeDoc();
+    return 'The update of Trip payment history for user Id: ' + this.userId + " is completed."
   }
 
   /**
@@ -180,6 +247,10 @@ class document {
     return this.doc.shareViewAccess();
   }
 
+  deleteDocument(){
+    DriveApp.getFileById(this.document.getId()).setTrashed(true);
+  }
+
   closeDoc(){
     this.doc.closeDoc();
   }
@@ -194,6 +265,10 @@ class allUserData{
     this.folderId = foldId;
     this.folder = DriveApp.getFolderById(this.folderId);
     this.spreadSheetId = spreadSheetId;
+    this.spreadSheet = SpreadsheetApp.openById(this.spreadSheetId);
+  }
+
+  openSpreadSheet(){
     this.spreadSheet = SpreadsheetApp.openById(this.spreadSheetId);
   }
 
@@ -229,7 +304,7 @@ class allUserData{
   }
 
   /**
-   * 
+   * It has an error. Leaves 1 transaction behint. It must pull 2 transaction for 1 trip ID
    */
   updatePaidTransactionHistory(transId, spreadSheetName){
     spreadSheetName = spreadSheetName || 'PaidTransactionHistory';
@@ -258,7 +333,8 @@ class allUserData{
     let transList = unpaidTransHist.getUnpaidTransactionHistory(tripId);
     for(let i = 0; i < transList.length; i++){
       this.spreadSheet.getSheetByName(spreadSheetName).appendRow(transList[i].getTransactionList());
-      if(i == 0) console.info(this.updatePaidTransactionHistory(transList[i].transId));
+      //if(i == 0) console.info(this.updatePaidTransactionHistory(transList[i].transId));
+      console.info(this.updatePaidTransactionHistory(transList[i].transId));
       transList[i].removeTransact();
     }
     return 'Succefully updated the unpaid transaction history.';
@@ -484,6 +560,45 @@ class allUserData{
       , this.spreadSheet.getSheetByName(spName), 'A1')[0][1] - 1;
   }
 
+  /**
+   * 
+   */
+  updatePaymentIdPay(payId, pos, info, spreadSheetName){
+    spreadSheetName = spreadSheetName || 'PaymentId';
+    let rowNum = this.getRowNumber(payId, spreadSheetName) + 1;
+    if(pos.toLowerCase() == 'status'){
+      this.updateCell(rowNum, 3, info, spreadSheetName);
+      this.spreadSheet.getSheetByName(spreadSheetName)
+      .getRange('A' + rowNum.toString() + ':D' + rowNum.toString()).setFontLine("line-through");
+      return 'Successfully updated payment id status to '+ info;
+    }
+    else if(pos.toLowerCase() == 'comments'){
+      this.updateCell(rowNum, 4, info, spreadSheetName);
+      this.spreadSheet.getSheetByName(spreadSheetName)
+      .getRange('A' + rowNum.toString() + ':D' + rowNum.toString()).setFontLine("line-through");
+      return 'Successfully updated payments Id comments to ' + info;
+    }
+    return 'You have made an unknown selection with position of '+ pos;    
+  }
+
+  updateCapturedPayment(payId, pos, info, spreadSheetName){
+    spreadSheetName = spreadSheetName || 'CapturePayment';
+    let rowNum = this.getRowNumber(payId, spreadSheetName) + 1;
+    if(pos.toLowerCase() == 'date of payment'){
+      this.updateCell(rowNum, 6, generalFunctions.formatDate(info), spreadSheetName);
+      this.spreadSheet.getSheetByName(spreadSheetName)
+      .getRange('A' + rowNum.toString() + ':F' + rowNum.toString()).setFontLine("line-through");
+      return 'Successfully updated captured payments date to ' + generalFunctions.formatDate(info);
+    }
+    else if(pos.toLowerCase() == 'comments'){
+      this.updateCell(rowNum, 6, info, spreadSheetName);
+      this.spreadSheet.getSheetByName(spreadSheetName)
+      .getRange('A' + rowNum.toString() + ':F' + rowNum.toString()).setFontLine("line-through");
+      return 'Successfully updated captured payments comments to ' + info;
+    }
+    return 'You have made an unknown selection with position of '+ pos; 
+  }
+
   updatePaidPaymentIdTrip(rowNumb, newPayId, col, spreadSheetName){
     spreadSheetName = spreadSheetName || 'PaidTriphistory';
     col = col || 12;
@@ -507,10 +622,124 @@ class allUserData{
 
   deleteRow(rowPos, spreadSheetName){
     this.spreadSheet.getSheetByName(spreadSheetName).deleteRow(rowPos);
+    SpreadsheetApp.flush();
   }
 
   updateCell(r, c, data, spreadSheetName){
     this.spreadSheet.getSheetByName(spreadSheetName).getRange(r,c).setValue(data);
     SpreadsheetApp.flush();
+  }
+
+  getUserPaymentList(status, spreadSheetName){
+    spreadSheetName = spreadSheetName || 'CapturePayment';
+    status = status || true;
+    let paymentList = [];
+    let paymets = this.getUncheckCapturedPayement();
+    let numbPay = paymets.length;
+    if(numbPay > 50) numbPay = 50;
+    for(let i = 0; i < numbPay; i++){
+      paymentList.push(
+        new capturePayment(paymets[i][0], paymets[i][1], generalFunctions.formatDate(paymets[i][2]), 
+          parseFloat(paymets[i][3]).toFixed(2), paymets[i][4])
+      ); 
+      console.info(this.setCheckBox(paymets[i].pop(), this.getNumbSheetCol(spreadSheetName), status, spreadSheetName));
+    }
+    return paymentList;
+  }
+
+  resetUserCheckList(status, spreadSheetName, querySheet){
+    querySheet = querySheet || 'QuerySheet';
+    status = status || false;
+    let colNumb = this.getNumbSheetCol(spreadSheetName);
+    let colNames = [];
+    
+    let query = '=arrayformula(QUERY({' + spreadSheetName + '!A:' + generalFunctions.getColLetter(colNumb, this.spreadSheet.getSheetByName(querySheet)) +
+      ' , ROW(' + spreadSheetName + '!A:' + generalFunctions.getColLetter(colNumb, this.spreadSheet.getSheetByName(querySheet)) + ')}, "Select ';
+    for(let i = 0; i < colNumb; i++){
+      colNames.push(('Col' + (i + 1)));
+      query += colNames[i] + ', ';
+    }
+
+    let lastCol = colNames.pop();
+    query += 'Col' + (colNumb + 1) + ' where ' + lastCol + ' = TRUE", 1))';
+    let data = generalFunctions.getQueryData(query, this.spreadSheet.getSheetByName(querySheet), 'A1');
+    for(let i = 1; i < data.length; i++){
+      let row = data[i].pop();
+      console.info(this.setCheckBox(row, colNumb, status, spreadSheetName));
+    }
+    return "Successfully reset the sheet " + spreadSheetName;
+  }
+
+  getUserPaidTripHistory(status, spreadSheetName){
+    spreadSheetName = spreadSheetName || 'PaidTriphistory';
+    status = status || true;
+    let tripList = [];
+    let trips = this.getUncheckPaidTrips();
+    let numbTrips = trips.length;
+    if(numbTrips > 50) numbTrips = 50;
+    for(let i = 0; i < numbTrips; i++){
+      tripList.push(
+        [generalFunctions.formatDate(trips[i][3]), parseFloat(trips[i][2]).toFixed(2), 'Paid', 
+        generalFunctions.formatDate(trips[i][8]), parseFloat(trips[i][9]).toFixed(2), parseFloat(trips[i][10]).toFixed(2)]
+      );
+      console.info(this.setCheckBox(trips[i].pop(), this.getNumbSheetCol(spreadSheetName), status, spreadSheetName));
+    }
+    return tripList;
+  }
+
+  getUncheckCapturedPayement(querySheet){
+    querySheet = querySheet || 'QuerySheet';
+    generalFunctions.addSpreadSheet(querySheet, this.spreadSheet);
+    return generalFunctions.getQueryData(
+      '=arrayformula(QUERY({CapturePayment!A:G , ROW(CapturePayment!A:G)}, "Select Col1, Col2, Col3, Col4, Col5, Col6, Col7, Col8 where Col7 != TRUE"))'
+      ,this.spreadSheet.getSheetByName(querySheet), 'A1'
+    ).slice(1);
+  }
+
+  setCheckBox(row, col, status, spreadSheetName){
+    status = status || false;
+    let spreadSheetData = this.spreadSheet.getSheetByName(spreadSheetName);
+    spreadSheetData.getRange(row, col).insertCheckboxes();
+    if(status)
+      spreadSheetData.getRange(row, col).check();
+    else
+      spreadSheetData.getRange(row, col).uncheck();
+    return 'Checkbox for the sheet '+ spreadSheetName + " is set to " + status.toString();
+  }
+
+  getUncheckPaidTrips(querySheet){
+    querySheet = querySheet || 'QuerySheet';
+    generalFunctions.addSpreadSheet(querySheet, this.spreadSheet);
+    return generalFunctions.getQueryData(
+      '=arrayformula(QUERY({PaidTriphistory!A:M , ROW(PaidTriphistory!A:M)}, "Select Col1, Col2, Col3, Col4, Col5, Col6, Col7, Col8, Col9, Col10, Col11, Col12, Col13, Col14 where Col13 != TRUE"))'
+      ,this.spreadSheet.getSheetByName(querySheet), 'A1'
+    ).slice(1);
+  }
+
+  getNumbSheetCol(spreadSheetName){
+    return this.spreadSheet.getSheetByName(spreadSheetName).getDataRange().getValues()[0].length;
+  }
+
+  addColCheckLists(){
+    let sheets = Object.keys(generalFunctions.getNewColumns());
+    for(let i = 0; i < sheets.length; i++){
+      this.resetUserCheckList(this.getNumbSheetCol(sheets[i]), false, sheets[i]);
+      console.info('Created checklist for sheet ' + sheets[i]);
+    }
+  }
+
+  addColunms(){
+    let sheetsCol = generalFunctions.getNewColumns();
+    let sheets = Object.keys(sheetsCol);
+    for(let i = 0; i < sheets.length; i++){
+      let numbCol = this.spreadSheet.getSheetByName(sheets[i]).getDataRange().getValues()[0].length;
+      let col = sheetsCol[sheets[i]];
+      for(let k = 0; k < col.length; k++){
+        this.spreadSheet.getSheetByName(sheets[i]).insertColumnAfter(numbCol);
+        this.spreadSheet.getSheetByName(sheets[i]).getRange(1, numbCol + 1).setValue(col[k]);
+        numbCol++;
+      }
+      console.info("Upadte sheet " + sheets[i] + " with columns: " + col);
+    }
   }
 }

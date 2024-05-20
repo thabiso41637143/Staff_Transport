@@ -19,28 +19,41 @@ class createUserStructure{
     this.spreadSheet = SpreadsheetApp.openById(this.spreadSheetId);
   }
 
+  /**
+   * 
+   */
   createUserFolder(){
     let folder = new folderStructure( this.mainFolderId, this.userId);
     this.newUserFolder = folder.getFolder();
     return 'successfull created user folder. With the following name ' + this.userId;
   }
 
+  /**
+   * 
+   */
+  createUserFile(temp){
+    console.info(this.createUserFolder());
+    let userFile = this.allFiles[temp];
+    this.newFileName = this.userId + ' ' + userFile['name'];
+    let file = new createFiles(userFile['Id'], this.newUserFolder.getFolder(), this.newFileName, userFile['type']);
+    this.newUserFile = file.getFile();
+    this.newUserFile.setViewAccess();
+    this.databaseList = [this.userId, this.mainFolderId, this.newUserFolder.getFolder().getName(), this.newUserFile.newFileId, 
+      this.newFileName, userFile['type'], userFile['purpose']];
+    if(!this.checkFile()){
+      this.spreadSheetData.appendRow(this.databaseList);
+      console.info('Successfully updated the database spreadsheet to:\n' + this.databaseList);
+    }
+  }
+
+  /**
+   * 
+   */
   createAllUserFiles(){
     console.info(this.createUserFolder());
     let files = Object.keys(this.allFiles);
     for(let i = 0; i < files.length; i++){
-      this.newFileName = this.userId + ' '+this.allFiles[files[i]]['name'];
-      let file = new createFiles(this.allFiles[files[i]]['Id'], this.newUserFolder.getFolder(), this.newFileName, 
-      this.allFiles[files[i]]['type']);
-
-      this.newUserFile = file.getFile();
-      this.newUserFile.setViewAccess();
-      this.databaseList = [this.userId, this.mainFolderId, this.newUserFolder.getFolder().getName(),
-        this.newUserFile.newFileId, this.newFileName, this.allFiles[files[i]]['type'], this.allFiles[files[i]]['purpose']];
-      if(!this.checkFile()){
-        this.spreadSheetData.appendRow(this.databaseList);
-        console.info('Successfully updated the database spreadsheet to:\n' + this.databaseList);
-      }
+      this.createUserFile(files[i]);
     }
   }
 

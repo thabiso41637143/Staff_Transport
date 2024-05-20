@@ -24,6 +24,13 @@ class generalFunctions{
     'name':'Historic data', 'type':'Spreadsheet', 'purpose': 'User History'};
     return templateFile;
   }
+
+  static getFolderIds(){
+    let foderIds = new Map();
+    foderIds['user2024'] = '1P8b-HMhCuD0g-K9u868zK6Yf4QER4u3r';
+    foderIds['testing'] = '1-AbjQEk1ib_n_BbjrBj5zVtvqIHpFFmA';
+    return foderIds;
+  }
   
   /**
    * Getting all user Ids from the database tracker
@@ -95,13 +102,59 @@ class generalFunctions{
   }
 
   static getQueryData(query, spreadSheet, range){
+    let lock = LockService.getScriptLock();
+    lock.waitLock(300000);
     spreadSheet.getRange(range).setValue(query);
     SpreadsheetApp.flush();
+    lock.releaseLock();
     return spreadSheet.getDataRange().getValues();
   }
 
   static addSpreadSheet(spName, spreadSheet){
-    if(!spreadSheet.getSheetByName(spName))
+    if(!spreadSheet.getSheetByName(spName)) 
       spreadSheet.insertSheet(spName);
+    SpreadsheetApp.flush();
   }
+
+  /**
+   * 
+   */
+  static getPosNumber(numb){
+    if(numb < 0) return numb * -1;
+    return numb;
+  }
+
+  /**
+   * 
+   */
+  static getNegNumber(numb){
+    if(numb > 0) return numb * -1;
+    return numb;
+  }
+
+  /**
+   * 
+   */
+  static getNewColumns(){
+    let sheetNames = new Map();
+    sheetNames['TransactionIDHistory'] = ['Check Update'];
+    sheetNames['PaidTransactionHistory'] = ['Check Update'];
+    sheetNames['UnpaidTransactionHistory'] = ['Check Update'];
+    sheetNames['TripsIDHistory'] = ['Check Update'];
+    sheetNames['PaidTriphistory'] = ['Payment Id','Check Update'];
+    sheetNames['UnpaidTripHistory'] = ['Check Update']; 
+    sheetNames['CapturePayment'] = ['Check Update'];  
+    sheetNames['PaymentId'] = ['Check Update'];
+    sheetNames['MessageId'] = ['Check Update'];
+    sheetNames['AttendanceAlert'] = ['Check Update'];
+    return sheetNames;
+  }
+
+  /**
+   * 
+   */
+  static getColLetter(numb, spreadSheet){
+    return this.getQueryData('=REGEXEXTRACT(ADDRESS(ROW(), '+ numb + '), "[A-Z]+")', spreadSheet, 'A1').pop().pop();
+  }
+
 }

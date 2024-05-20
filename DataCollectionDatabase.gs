@@ -101,6 +101,21 @@ class collectionDatabase {
   /**
    * 
    */
+  deleteFileById(fileId, spName, querySheet, range){
+    querySheet = querySheet || 'QuerySet';
+    range = range || 'A1';
+    spName = spName || 'CreatedFiles';
+    let file = generalFunctions.getQueryData(
+      '=ARRAYFORMULA(QUERY({CreatedFiles!A:G, ROW(CreatedFiles!A:G)},"Select Col1, Col2, Col3, Col4, Col5, Col6, Col7, Col8 WHERE Col1 = \'' + fileId + '\'", 1))',
+      this.spreadSheet.getSheetByName(querySheet), range
+    ).pop();
+    this.spreadSheet.getSheetByName(spName).deleteRow(file.pop());
+    return 'Successfully removed the file with file Id ' + fileId + " from the " + spName;
+  }
+
+  /**
+   * 
+   */
   recordPaymentTransaction(transId, transType, transDate, transAmount, tripId, spreadNames){
     try{
       spreadNames = spreadNames || 'AccountTransaction';

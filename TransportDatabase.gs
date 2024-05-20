@@ -339,26 +339,52 @@ class transportDatabaseSheet {
     return this.spreadSheet.getSheetByName(spName).getDataRange().getValues();
   }
   
-  getAccout(userId, spName){
+  // getAccout(userId, type, spName){
+  //   spName = spName || 'QuerySet';
+    
+  //   let row = 1;
+  //   if(this.createQuery(
+  //     '=QUERY(Account!A:D,"Select A, B, C, D Where B = \'' + userId.toString().toUpperCase() + '\'",1)'
+  //   ).length > 1){
+  //     let data = this.spreadSheet.getSheetByName(spName).getDataRange().getValues();
+  //     return new account(data[row][0], data[row][1].toUpperCase(), 
+  //       parseFloat(data[row][2]))
+  //   }
+  //   return -1;
+  // }
+  /**
+   * 
+   */
+  getAccout(id, type, spName){
     spName = spName || 'QuerySet';
-    let row = 1;
-    if(this.createQuery(
-      '=QUERY(Account!A:D,"Select A, B, C, D Where B = \'' + userId.toString().toUpperCase() + '\'",1)'
-    ).length > 1){
-      let data = this.spreadSheet.getSheetByName(spName).getDataRange().getValues();
-      return new account(data[row][0], data[row][1].toUpperCase(), 
-        parseFloat(data[row][2]))
+    type = type || 'userid';
+    if(type.toLowerCase() == 'userid'){
+      let data = generalFunctions.getQueryData(
+        '=QUERY(Account!A:D,"Select A, B, C, D Where B = \'' + id.toString().toUpperCase() + '\'",0)', 
+        this.spreadSheet.getSheetByName(spName), 'A1'
+      )[0];
+      return new account(data[0], data[1].toUpperCase(), parseFloat(data[2]));
     }
-    return -1;
+    else if(type.toLowerCase() == 'accountid'){
+      let data = generalFunctions.getQueryData(
+          '=QUERY(Account!A:D,"Select A, B, C, D Where A = ' + id + '",0)', 
+          this.spreadSheet.getSheetByName(spName), 'A1'
+        )[0];
+      return new account(data[0], data[1].toUpperCase(), parseFloat(data[2]));
+    }
+    return -1
   }
 
+  /**
+   * 
+   */
   updateAcountBalance(type, id, balance){
     try{
         if(type.toLowerCase() == 'userid'){
-          return this.getAccout(id).updateAccBalance(balance);
+          return this.getAccout(id, type.toLowerCase()).updateAccBalance(balance);
         }
         else if(type.toLowerCase() == 'accountid'){
-          return this.getAccoutMap()[id].updateAccBalance(balance);
+          return this.getAccout(id, type.toLowerCase()).updateAccBalance(balance);
         }
           return 'Invalid selection';
     }catch(e){

@@ -7,24 +7,18 @@ function dataReader(option, details) {
 
   if(option.toLowerCase() == 'login'){
     return reader.mainMenueReader(option, JSON.parse(JSON.stringify({'userid':details.parameter.userid,
-        'type': details.parameter.type}
-      )
-    ));
+        'type': details.parameter.type
+      })));
   }
   else if(option.toLowerCase() == 'userdetails'){
     return JSON.stringify(reader.mainMenueReader(option, JSON.parse(JSON.stringify({
           'userid': details.parameter.userid
-        }
-      )))
-    );
+      }))));
   }
   else if(option.toLowerCase() == 'triphistory'){
     return reader.mainMenueReader(option, JSON.parse(JSON.stringify({
-            'userid': details.parameter.userid
-          }
-        )
-      )
-    );
+        'userid': details.parameter.userid
+      })));
   }
   else if(option.toLowerCase() == 'accounthistory'){
 
@@ -34,53 +28,42 @@ function dataReader(option, details) {
         option,
         JSON.parse(JSON.stringify({
           'userid': details.parameter.userid
-        }
-      ))
-    );
+      })));
   }
   else if(option.toLowerCase() == 'alluserprofile'){
     return reader.mainMenueReader(
         option,
         JSON.parse(JSON.stringify({
           'userid': details.parameter.userid
-        }
-      ))
-    );
+      })));
   }
   else if (option.toLowerCase() == 'allgroup'){
     return reader.mainMenueReader(
         option,
         JSON.parse(JSON.stringify({
           'userid': details.parameter.userid
-        }
-      ))
-    );
+      })));
   }
   else if(option.toLowerCase() == 'alert'){
     return reader.mainMenueReader(
         option,
         JSON.parse(JSON.stringify({
           'userid': details.parameter.userid
-        }
-      ))
-    );
+      })));
   }
   else if(option.toLowerCase() == 'lastseen'){
     return reader.mainMenueReader(
         option,
         JSON.parse(JSON.stringify({
           'userid': details.parameter.userid
-        }
-      ))
-    );
+      })));
   }
   else if(option.toLowerCase() == 'driversummary'){
     return reader.mainMenueReader(
         option,
         JSON.parse(JSON.stringify({
           'userid': details.parameter.userid
-        }))
-    );
+      })));
   }
 }
 

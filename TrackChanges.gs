@@ -52,7 +52,7 @@ function updateNewDriver(){
 }
 
 /**
- * create main folder.
+ * Create main folder.
  * Run manually when creating main folder.
  */
 function createMainFolder(){
@@ -85,14 +85,14 @@ function updateUserDoc(){
     let userFiles = new logTracker();
     let userFileLog = userFiles.getuserFileLog(userid[i]);
     if(!userFileLog.mainUpdate){
-      let userDocs = new updateUserTemplates(userid[i]);
+      let userDocs = new updateUserTemplates(userid[i], generalFunctions.getFolderIds()['user2024']);
       userDocs.updateUserTripHistory();
       userDocs.updateUserMsgReport();
       console.info(userFiles.spreadSheetUpdateLog(userid[i]));
       return userFiles.removeRow(userid[i], 'DocumentUpdateLog');
     }
     else if(!userFileLog.addDate || !userFileLog.addDate == ''){
-      let userDocs = new updateUserTemplates(userid[i]);
+      let userDocs = new updateUserTemplates(userid[i], generalFunctions.getFolderIds()['user2024']);
       userDocs.updateUserTripHistory();
       userDocs.updateUserMsgReport();
       console.info(userFiles.spreadSheetUpdateLog(userid[i]));
@@ -102,7 +102,7 @@ function updateUserDoc(){
 }
 
 /**
- * create main update.
+ * Create main update.
  * Execute autometically after 10 minutes using triggers
  */
 function updateMainLog(){
@@ -117,14 +117,14 @@ function updateMainLog(){
     let userFileLog = userFiles.getuserFileLog(userid[i]);
     if(!userFileLog.mainUpdate){
       console.log('Updating main for user '+ userid[i]);
-      let userSheet = new updateUserTemplates(userid[i]);
+      let userSheet = new updateUserTemplates(userid[i], generalFunctions.getFolderIds()['user2024']);
       userSheet.updateUserHistory();
       console.info(userFileLog.updateMain());
       return userFiles.removeRow(userid[i], 'SpreadSheetUpdateLog');
     }
     else if(!userFileLog.addDate || !userFileLog.addDate == ''){
       console.log('Updating newdate section for user: ' + userid[i]);
-      let userSheet = new updateUserTemplates(userid[i]);
+      let userSheet = new updateUserTemplates(userid[i], generalFunctions.getFolderIds()['user2024']);
       userSheet.updateUserHistory();
       console.info(userFileLog.updateAddedDate());
       return userFiles.removeRow(userid[i], 'SpreadSheetUpdateLog');
@@ -144,4 +144,19 @@ function updateMsgNotification(){
   let msg = new messages();
   for(let i = 0; i < driveList.length; i++)
     console.info(msg.getAttSendToMsg_1(driveList[i]));
+}
+
+/**
+ * 
+ */
+function updateSheetsCol(){
+  let data = SpreadsheetApp.openById('1y4nNhIe8omKyTMjaB7XrPcL0CqKGMXr2x9W7Y8FLZEU').getSheetByName('AddCol')
+  .getDataRange().getValues();
+  if(data.length > 1 && data[1][0] != 'Inprogress'){
+    SpreadsheetApp.openById('1y4nNhIe8omKyTMjaB7XrPcL0CqKGMXr2x9W7Y8FLZEU').getSheetByName('AddCol').getRange(2, 2).setValue('Inprogress');
+    let user = new updateUserTemplates(data[1][0], generalFunctions.getFolderIds()['user2024']);
+    console.error(user.updateSheetsCols());
+    SpreadsheetApp.openById('1y4nNhIe8omKyTMjaB7XrPcL0CqKGMXr2x9W7Y8FLZEU').getSheetByName('AddCheckList').appendRow([data[1][0]]);
+    SpreadsheetApp.openById('1y4nNhIe8omKyTMjaB7XrPcL0CqKGMXr2x9W7Y8FLZEU').getSheetByName('AddCol').deleteRow(2);
+  }
 }

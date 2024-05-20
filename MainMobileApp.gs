@@ -240,6 +240,7 @@ class mainMobileApp{
       return 'Unknown choice';
     }
   }
+  
   /**
    * This function need to be updated
    */
